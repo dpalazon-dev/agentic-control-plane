@@ -2,24 +2,24 @@
 
 ## Status
 
-This document describes the **problem, governed object and desired experience** of Agentic Work Control Plane. It does not define an implementation architecture.
+This document describes the **problem, governed object and desired operating model** of Agentic Work Control Plane. It does not define an implementation architecture.
 
-The project is currently in **research and architecture validation**. Mechanisms described here are hypotheses unless they are explicitly recorded as accepted decisions in [`DECISIONS.md`](DECISIONS.md).
+The project is currently in **research and architecture validation**. Mechanisms described here are hypotheses unless explicitly recorded as accepted decisions in [`DECISIONS.md`](DECISIONS.md).
 
 ---
 
 ## Problem
 
-Coding agents are becoming capable of carrying out increasingly substantial software work, but the **work surrounding execution** is still fragmented across:
+Coding agents are increasingly capable of carrying out substantial software work, but the **organization surrounding that execution** is still fragmented across:
 
 - conversations and individual sessions;
 - client-specific plans, todos and instructions;
-- specification documents disconnected from execution state;
-- issue trackers designed primarily around human coordination;
+- specifications disconnected from execution state;
 - reasoning and decisions that are difficult to reconstruct later;
 - acceptance criteria that are inconsistently connected to implementation;
 - validation evidence that is often ephemeral;
-- project knowledge that must repeatedly be reintroduced to a new session or coding client.
+- project knowledge that must repeatedly be reintroduced;
+- agent responsibilities that are improvised inside a prompt or session rather than represented as part of the work itself.
 
 The result is an asymmetry:
 
@@ -28,185 +28,357 @@ execution capability ↑
 
 while
 
-work continuity / traceability / governance ≠ necessarily ↑
+work structure / continuity / governance / accountability ≠ necessarily ↑
 ```
 
-A coding agent can often produce code quickly, yet a developer may still struggle to answer basic project-level questions:
+A capable coding agent can produce code quickly, yet the developer may still struggle to answer:
 
-- What are we actually trying to achieve?
-- What work currently exists and why?
+- What are we trying to achieve?
+- What work exists and why?
+- How has it been decomposed into work packages and tasks?
 - What depends on what?
 - What is ready, blocked, active or complete?
-- Which constraints apply to this work?
-- Which decisions produced the current direction?
-- What capabilities does this work require?
-- What evidence supports a completion claim?
-- What does the next coding session need to know?
+- Which constraints apply?
+- Which agent responsibilities are required for this work?
+- Has implementation been independently tested and reviewed where required?
+- What context should each participant receive?
+- What permissions should apply to each participant?
+- What evidence supports completion?
+- What does the next session or agent need to know?
 
-The project investigates whether these concerns justify a **shared control layer for software work performed with coding agents**.
+The project investigates whether these concerns justify a **shared control layer for software work performed with existing coding agents**.
 
 The central question is:
 
-> How can different coding agents work against the same persistent, governed and verifiable model of software work without forcing developers to leave the coding client they already use?
+> How can software work be persistently structured, assigned the right agent responsibilities, governed and verified while developers continue using their preferred coding agents normally?
 
 ---
 
-## The governed object is work, not agents
+## The governed object is work, not the agent fleet
 
-This distinction is fundamental.
-
-The emerging industry use of **Agent Control Plane** refers primarily to operating and governing agents themselves: inventory, deployment, identity, permissions, lifecycle, fleet observability, model/tool access, cost and operational health.
-
-Agentic Work Control Plane investigates a different object:
+This distinction remains fundamental.
 
 ```text
 Agent Control Plane
-    governs → agents
+    governs → agents / agent infrastructure
 
 Agentic Work Control Plane
     governs → software work performed with agents
 ```
 
-The project therefore does not begin from questions such as:
+AWCP does not primarily manage agent deployment, inventory, lifecycle, fleet health, hosting or distributed scheduling.
 
-- Which agents are deployed?
-- How healthy is the agent fleet?
-- Which model version does each agent use?
-- Where should an agent run?
-- How should agents be scheduled across infrastructure?
+It starts instead from the work:
 
-It begins from questions such as:
+```text
+Intent
+  ↓
+Work Package
+  ↓
+Task
+  ↓
+required responsibilities
+  ↓
+execution
+  ↓
+evidence
+  ↓
+completion
+```
 
-- What outcome is intended?
-- What work is necessary?
-- What is the state of that work?
-- What rules and decisions constrain it?
-- What capabilities are required to perform it?
-- What must be verified?
-- What evidence demonstrates completion?
+Agents are important because the work may require **different agent roles** to participate. They are not, however, managed as an infrastructure fleet by AWCP.
 
-Agents, humans, deterministic tools and CI may all become **executors or contributors** to work. They are not necessarily the primary semantic object of the system.
+---
+
+## The missing organizational layer
+
+A key part of the project is not merely persistent task storage. The work itself may require a particular **agentic organizational structure**.
+
+For example:
+
+```text
+Implementation Task
+├── Developer
+├── Tester
+└── Code Reviewer
+```
+
+```text
+Architecture / Organization Task
+├── Architect
+└── Senior Engineer
+```
+
+A higher-risk implementation might require additional responsibilities such as security review, while a trivial change may require only a developer.
+
+Therefore the intended model is not:
+
+```text
+Task → one generic coding agent
+```
+
+It is closer to:
+
+```text
+work type / risk / complexity
+          ↓
+derive required agent roles
+          ↓
+define responsibilities and required capabilities
+          ↓
+resolve those roles through the active coding environment
+          ↓
+collect evidence per responsibility
+          ↓
+evaluate completion
+```
+
+The goal is to make the **methodology executable**: the system should derive the organizational requirements of the work instead of relying on the human to remember a process checklist or manually summon every reviewer.
+
+---
+
+## Role ≠ capability ≠ executor ≠ model
+
+The previous principle `Capability ≠ Agent Role ≠ Model` remains useful, but roles must not be reduced to capabilities.
+
+The more complete distinction is:
+
+```text
+Work Type
+≠ Agent Role
+≠ Capability
+≠ Executor Instance
+≠ Model
+```
+
+### Agent Role
+
+A semantic responsibility that must participate in a unit of work, for example:
+
+```text
+Developer
+Tester
+Code Reviewer
+Architect
+Senior Engineer
+Researcher
+Security Reviewer
+```
+
+This vocabulary is illustrative rather than a finalized catalog.
+
+### Capability
+
+What a role needs to be able to do, for example:
+
+```text
+implement
+debug
+test
+review
+research
+reason
+verify
+document
+```
+
+### Executor
+
+How the role is materialized in the current environment, potentially through:
+
+- a native Claude Code subagent;
+- an OpenCode agent;
+- a Codex-supported mechanism;
+- a Gemini CLI mechanism;
+- a separate coding-agent session;
+- an external deterministic tool where appropriate;
+- a human when judgment or fallback is required.
+
+### Model / tools / context / permissions
+
+These are implementation policies of the resolved executor. A `Code Reviewer` role must not imply a permanent model choice or a globally fixed prompt.
+
+This preserves portability while keeping **responsibility assignment first-class**.
+
+---
+
+## Role composition may be mandatory
+
+Not every work item should pass through the same pipeline.
+
+However, once the system classifies a unit of work, some roles may become **required before completion**.
+
+Examples:
+
+```text
+Trivial edit
+→ Developer
+
+Small bug
+→ Developer
+→ Tester
+
+Core implementation
+→ Developer
+→ Tester
+→ Code Reviewer
+
+Security-sensitive implementation
+→ Developer
+→ Tester
+→ Security Reviewer
+→ Code Reviewer
+
+Architecture change
+→ Architect
+→ Senior Engineer
+→ Developer / downstream implementation roles as needed
+```
+
+These are examples, not accepted policies.
+
+The important principle is:
+
+> **No mandatory global agent pipeline, but potentially mandatory role composition per class of work.**
+
+Some roles may also require **separation of responsibility**. For example, the executor that implemented a change may not be allowed to satisfy an independent review requirement merely by reviewing its own output.
 
 ---
 
 ## Desired experience
 
-The developer should continue using Claude Code, Codex, OpenCode, Gemini CLI or another coding client normally.
+The developer continues using Claude Code, Codex, OpenCode, Gemini CLI or another coding client normally.
 
 Conceptually:
 
 ```text
-                    Human
-                      │
-                      ▼
-              Existing coding client
-                      │
-                      │ executes / contributes
-                      ▼
-                 Software work
-                      ▲
-                      │ structured / governed by
-                      │
-          Agentic Work Control Plane
-
-       intent · dependencies · constraints
-       decisions · capabilities · evidence
-       verification · completion · continuity
+                         Human
+                           │
+                           ▼
+                  Existing Coding Client
+                           │
+                    participates in
+                           ▼
+              ┌─────────────────────────┐
+              │     SOFTWARE WORK       │
+              │                         │
+              │ intent                  │
+              │ work packages / tasks   │
+              │ required roles          │
+              │ constraints             │
+              │ decisions               │
+              │ evidence / completion   │
+              └───────────┬─────────────┘
+                          ▲
+                          │ governed by
+                          │
+              Agentic Work Control Plane
 ```
 
-The Work Control Plane is therefore **adjacent to execution**, not a replacement execution runtime.
+The coding client owns its normal interaction and agent loop. AWCP maintains or resolves the structure the coding environment is expected to work against.
 
 A typical desired interaction could look like:
 
 ```text
-human expresses intent through normal coding client
+human expresses intent normally
         ↓
-relevant persistent work context is resolved
+intent is resolved into persistent work
         ↓
-work requirements / constraints / gates are made available
+work is classified by type / risk / complexity
         ↓
-coding client executes using its native agent loop and tools
+required roles and gates are derived
         ↓
-verification produces evidence
+relevant context, policies and permissions are resolved
         ↓
-work state is updated
+roles are materialized using the current coding agent's native mechanisms
         ↓
-next session or client can continue from explicit state
+execution / review / verification occurs
+        ↓
+evidence updates persistent work state
+        ↓
+completion is accepted, repaired or escalated
 ```
 
-The human should be able to inspect this state without needing to operate a second primary interface.
+The human should be able to inspect this process without operating a second primary interface.
 
-**Transparent does not mean invisible.** The goal is low interaction overhead with high inspectability.
+**Transparent does not mean invisible.**
 
 ---
 
-## The core product hypothesis
+## Compose agent infrastructure; do not rebuild it by default
 
-The project is testing whether useful value exists in a small, client-independent semantic layer around software work.
+AWCP necessarily depends on concerns such as:
 
-A working formulation is:
+- context selection and delivery;
+- project memory;
+- permissions;
+- policy enforcement;
+- sandboxing;
+- tool access;
+- observability;
+- telemetry;
+- verification tooling;
+- possibly agent identity or session information.
 
-> **A local, agent-agnostic control plane for persistent, governed and verifiable software work across coding agents.**
+That does **not** mean AWCP should implement these subsystems.
 
-This formulation implies three important separations.
+The preferred direction is:
 
-### 1. Work ≠ conversation
+```text
+AWCP semantic requirement
+        ↓
+resolve against available infrastructure
+        ↓
+client-native capability / local external system / existing tool
+```
 
-A conversation may create, update or discuss work, but the lifetime of meaningful project work should not necessarily equal the lifetime of a chat session.
+For example, AWCP may determine that a `Code Reviewer` needs read-only repository access and a bounded context package. The permission mechanism and context engine should be supplied by the coding client or an existing local system when possible.
 
-### 2. Work ≠ executor
+Likewise, persistent memory may be provided by an existing context/memory system; observability may come from an existing local stack; permissions may be enforced by native client policies or a reusable control-plane component.
 
-A work requirement should not be permanently coupled to one coding client, named agent, model or persona.
+**Integrate, do not reimplement** is therefore a core design discipline.
 
-For example, `verification required` is a property of the work. It might later be satisfied by tests, a coding-agent review pass, a dedicated reviewer, CI or a human.
+---
 
-### 3. Work control ≠ agent runtime
+## The specific integration gap being investigated
 
-The Work Control Plane may determine that a constraint applies, that evidence is missing or that a capability is required. It should not therefore assume ownership of the model loop that performs the work.
+A large part of modern agent infrastructure is designed for developers who are **building custom agents** on top of an SDK, orchestration framework or hosted control plane.
+
+That is not the primary target here.
+
+AWCP is specifically concerned with the daily development experience of users who already work through:
+
+```text
+Claude Code
+Codex
+OpenCode
+Gemini CLI
+future equivalent coding agents
+```
+
+The question is whether existing context, memory, permission, governance and observability systems can be composed around these **already-built coding agents** without requiring the user to replace them with a custom agent runtime.
+
+That integration boundary may be one of the most important genuine gaps to validate.
 
 ---
 
 ## Candidate work concerns
 
-The following are research candidates, not a committed domain model.
+These remain research candidates rather than a final domain model:
 
-### Intent
+- `Intent` — why the work exists and the intended outcome;
+- `WorkPackage / Work / Task` — units and decomposition of work;
+- `Dependency` — readiness/blocking relationships;
+- `RoleRequirement` — which agent responsibilities must participate;
+- `CapabilityRequirement` — what each role needs to do;
+- `Constraint / Policy` — rules affecting the work;
+- `ContextRequirement` — what information a role needs;
+- `PermissionRequirement` — what operations a role may perform;
+- `Decision` — durable changes in direction or interpretation;
+- `Evidence` — observable support for a claim;
+- `Outcome / Completion` — conditions under which work can transition to done.
 
-Why does this work exist and what outcome is expected?
-
-### Specification / contract
-
-What must be true of the result?
-
-### Work structure
-
-What units of work exist, how are they related and what is currently actionable?
-
-### Decisions
-
-Which decisions changed the interpretation, scope or execution of the work, and why?
-
-### Constraints and policy
-
-Which rules apply to this work, and which of them are guidance versus technically enforceable?
-
-### Capabilities
-
-What kind of ability is required to progress the work?
-
-### Evidence
-
-What observable result supports a claim about implementation, validation or completion?
-
-### Completion
-
-Under which conditions can the work legitimately transition to done?
-
-### Continuity
-
-What state must survive so another session, client or executor can continue without reconstructing the project from chat history?
-
-The project must still prove which of these concepts deserve first-class representation.
+The project must still prove which concepts deserve first-class representation.
 
 ---
 
@@ -214,59 +386,51 @@ The project must still prove which of these concepts deserve first-class represe
 
 ### Existing coding clients remain primary
 
-Claude Code, Codex, OpenCode, Gemini CLI and similar tools remain the developer's normal interaction surface.
+Users continue working through their normal coding agents.
 
-### Govern work, do not manage an agent fleet
+### Govern work, not an agent fleet
 
-The project should not drift into agent deployment, registry, fleet health, remote runtime operations or enterprise agent lifecycle management.
+Agent fleet operations remain outside the primary scope.
 
-### Local-first
+### Roles are first-class work requirements
 
-Core work state and control should function locally by default. A hosted service must not be required for the fundamental experience.
+Work type, risk and complexity may derive mandatory agent roles and responsibility separation.
 
-### Agent/client-agnostic work semantics
+### Roles are portable semantics, not fixed implementations
 
-The semantic meaning of work should not depend on Claude Code, Codex, OpenCode or another client. Client-specific mechanisms belong behind integration boundaries.
+`Developer`, `Tester` or `Reviewer` describe responsibility. They do not imply a particular client, model, prompt or runtime mechanism.
+
+### Adaptive structure, not one global pipeline
+
+Different work requires different role compositions and gates.
+
+### Context and permissions are requirements, not necessarily owned subsystems
+
+AWCP may express what context or permission profile a role needs while delegating delivery/enforcement to existing infrastructure.
+
+### Native and upstream capabilities before custom machinery
+
+Reuse coding-client and local-system capabilities wherever they sufficiently meet the requirement.
 
 ### Machine-native and human-readable
 
-Important work state should be structured enough for tools and agents to query reliably while remaining inspectable and understandable by a developer.
-
-### Persistent where persistence solves a real problem
-
-Cross-session continuity is important, but this does not imply that every event, prompt or intermediate thought should become durable state.
+Important work state should remain both reliably queryable and inspectable by humans.
 
 ### Verifiable completion
 
-`Done` should not mean only that an executor claims success. Where practical, completion should be tied to explicit expected outcomes and evidence.
+`Done` should depend on required responsibilities and evidence, not merely an executor's claim.
 
-### Evidence over hidden reasoning
+### Separation of responsibility where needed
 
-The system should not attempt to persist or reproduce private chain-of-thought. It should retain useful externally inspectable artifacts: decisions, actions, tests, outputs, failures, approvals and evidence.
+Independent testing/review should remain meaningfully independent when the work policy requires it.
 
-### Guidance and enforcement are different
+### Guidance, verification and enforcement are different
 
-Natural-language instructions can guide. Permissions, hooks, policy engines, sandboxes, CI gates or equivalent supported mechanisms may enforce. The system must represent that difference honestly.
-
-### Native capabilities before custom machinery
-
-If a coding client or existing project already solves a concern adequately, reuse or compose it before creating another subsystem.
-
-### Capability ≠ Agent Role ≠ Model
-
-A semantic requirement of the work must not automatically become a permanent named agent or fixed model assignment.
-
-```text
-WORK CAPABILITY ≠ AGENT ROLE ≠ MODEL
-```
-
-### Adaptive structure, not mandatory pipelines
-
-The amount of process required should derive from work type, risk, uncertainty and verification needs rather than forcing every request through the same agent sequence.
+The system must represent the guarantee actually available from the host environment.
 
 ### Minimal ownership
 
-The Work Control Plane should own only state whose ownership is necessary to provide its guarantees. It may query, reference or project state owned by Git, CI, a work substrate or another system.
+AWCP should own only the state necessary to provide its work-control guarantees.
 
 ---
 
@@ -275,41 +439,43 @@ The Work Control Plane should own only state whose ownership is necessary to pro
 The project is **not** trying to create:
 
 - another Claude Code, Codex, OpenCode, Gemini CLI or Cursor;
-- an agent runtime or primary model loop;
-- an Agent Control Plane for enterprise fleets;
-- an agent registry or deployment platform;
-- an IDE or chat interface;
-- a Jira or Kanban clone;
-- a generic project-management platform;
-- a generic workflow engine;
+- a custom agent runtime or primary model loop;
+- an enterprise Agent Control Plane or fleet manager;
 - a generic multi-agent framework;
-- a fixed collection of persona agents;
-- a swarm by default;
-- a distributed scheduler;
-- a mandatory worktree strategy;
-- a prompt framework whose critical rules exist only as prose;
+- a fixed global agent pipeline;
+- a prompt-only persona framework;
+- its own context engine merely because context is required;
+- its own memory system merely because continuity is required;
+- its own permission/sandbox system merely because governance is required;
+- its own observability platform merely because execution should be visible;
+- a Jira/Kanban clone;
+- a generic workflow engine;
+- an IDE or chat interface;
 - a mandatory TUI;
-- a second source of truth merely because one is convenient to implement.
+- a second source of truth without demonstrated need.
 
 ---
 
-## Observation and the optional TUI
+## Observation and optional TUI
 
-If meaningful work state exists outside conversations, humans need a way to inspect it.
+If meaningful work structure exists outside conversations, humans need direct visibility into it.
 
-A TUI remains only one possible projection of the Work Control Plane. It may eventually show:
+A future observer may show:
 
 - current intent;
-- work and dependencies;
-- ready / blocked / active / completed work;
-- applicable constraints and gates;
-- requested capabilities and resolved executors;
+- work packages and tasks;
+- dependencies and readiness;
+- required roles and their status;
+- resolved executors;
+- relevant context sources;
+- permission/enforcement guarantees;
 - pending human decisions;
-- evidence and verification results;
+- quality gates;
+- evidence;
 - failures and repair state;
-- derived progress or telemetry where useful.
+- progress and available telemetry.
 
-It must not become the primary product surface or own a second state model.
+The TUI remains optional and owns no independent state.
 
 ---
 
@@ -317,24 +483,22 @@ It must not become the primary product surface or own a second state model.
 
 `portable-opencode` and Agentic Work Control Plane remain separate projects.
 
-`portable-opencode` is an OpenCode-specific environment concerned with installing, configuring, reproducing and maintaining an opinionated OpenCode + OpenRouter setup.
+`portable-opencode` configures and maintains an opinionated OpenCode + OpenRouter environment. AWCP investigates a portable work-control model across coding agents.
 
-Agentic Work Control Plane investigates a client-independent model for structuring and governing software work across coding clients.
-
-`portable-opencode` could eventually consume, expose or implement an integration for the Work Control Plane, but no architecture, configuration, model presets, Graphify policy, agent definitions, observability stack or CLI design is inherited automatically.
+`portable-opencode` could later become an especially capable AWCP adapter or distribution because it controls more of its OpenCode environment, but AWCP does not inherit its implementation decisions by default.
 
 ---
 
 ## Success criterion for the research phase
 
-The project succeeds if it determines the smallest truthful answer to the problem.
+The project succeeds if it discovers the smallest truthful architecture that provides this experience.
 
-That answer might be:
+Possible outcomes include:
 
-1. a distinct Work Control Plane is justified;
-2. only a very thin semantic/integration layer is necessary;
-3. an existing work substrate plus coding-client integrations is sufficient;
-4. a project such as Spec Kit, Pulse or another system already solves the problem adequately;
-5. the category itself is not useful enough to justify implementation.
+1. a distinct AWCP is justified;
+2. only a thin semantic/integration layer is needed;
+3. existing work/context/control systems can be composed with coding-agent adapters;
+4. an existing product already provides the desired experience;
+5. some desired role/governance guarantees cannot be achieved without replacing the coding-client runtime, invalidating part of the vision.
 
-The purpose of this phase is not to defend the product idea. It is to discover what, if anything, must exist between **human intent**, **software work** and **coding-agent execution**.
+The purpose is to discover the irreducible layer between **human intent**, **organized agentic software work** and **existing coding-agent execution**.
