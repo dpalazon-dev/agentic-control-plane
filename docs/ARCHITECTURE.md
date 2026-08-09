@@ -2,7 +2,7 @@
 
 ## Status
 
-This document records **architectural hypotheses to validate**. It is not an implementation architecture.
+This document records **architectural hypotheses to validate** for Agentic Work Control Plane. It is not an implementation architecture.
 
 No language, database, daemon model, protocol, API, workflow engine, schema, TUI framework or storage technology is selected here. Accepted project decisions live only in [`DECISIONS.md`](DECISIONS.md).
 
@@ -10,34 +10,124 @@ Labels used below:
 
 - **HYPOTHESIS** — plausible structure that still requires evidence.
 - **OPEN** — unresolved question or design choice.
-- **BOUNDARY** — consequence of an already accepted project decision.
+- **BOUNDARY** — consequence of an accepted project decision.
 
-## Initial conceptual model
+---
 
-**HYPOTHESIS**
+## 1. Architectural reframing
+
+The previous mental model was too easy to read as a runtime stack:
 
 ```text
-Human
-  ↓
-Existing Coding Client
-Claude Code / Codex / OpenCode / Gemini CLI / ...
-  ↓
-Client-Specific Integration Adapter
-  ↓
-Agentic Control Plane Core
-  ↓
+Coding Client
+    ↓
+Control Plane
+    ↓
 Persistent Work State
 ```
 
-This diagram expresses responsibility boundaries, not process topology.
+That representation is misleading because the Work Control Plane is not intended to sit *inside* or *under* the coding agent's execution loop.
 
-In particular, **Control Plane Core does not mean daemon**. The eventual core could be invoked on demand, exposed through a process, composed from files and commands, or take another form. Process lifecycle and state ownership remain open.
+The more accurate hypothesis is an **orthogonal work-control relationship**:
 
-The word **adapter** also does not imply a single protocol. Different clients expose different supported integration surfaces, and the eventual mechanism may differ per client.
+```text
+                         Human
+                           │
+                           ▼
+                  Existing Coding Client
+             Claude / Codex / OpenCode / ...
+                           │
+                           │ executes / contributes
+                           ▼
+                  Repository + Tooling
+                           │
+                           │ outcomes / evidence
+                           ▼
 
-## Conceptual responsibilities
+             ┌────────────────────────────┐
+             │ Agentic Work Control Plane │
+             │                            │
+             │ intent                     │
+             │ work structure             │
+             │ constraints                │
+             │ decisions                  │
+             │ capability requirements    │
+             │ evidence                   │
+             │ completion                 │
+             └────────────────────────────┘
+                    ▲               │
+                    │               │
+             persistent state   relevant work
+                    │           context / gates
+                    └───────────────┘
+```
 
-The current hypothesis groups potential responsibilities into five areas:
+The arrows are conceptual rather than a final data-flow topology.
+
+**BOUNDARY:** The coding client owns its native agent loop and execution experience.
+
+**BOUNDARY:** The Work Control Plane governs the semantic state and requirements of work, not the operational lifecycle of an agent fleet.
+
+This means that "control" should be interpreted as **control of work state, admissible transitions, applicable constraints and completion claims**, not necessarily direct runtime control over an executor.
+
+---
+
+## 2. Primary architectural object: software work
+
+**HYPOTHESIS:** The most useful shared abstraction is not `Agent`, `Session` or `Prompt`, but some minimal representation of **software work**.
+
+Candidate semantic concepts include:
+
+```text
+Intent
+Work
+Dependency
+Constraint
+Decision
+CapabilityRequirement
+Evidence
+Outcome
+State
+```
+
+These names are provisional. The project must not create a full ontology before experiments demonstrate which distinctions are useful.
+
+### Work as a contract boundary
+
+A useful mental model may be:
+
+```text
+Human intent
+    ↓
+Work contract
+    ↓
+Executor contribution
+    ↓
+Observable outcome
+    ↓
+Evidence
+    ↓
+Completion decision
+```
+
+A `Work contract` here does not imply a specific schema. It simply means that execution should have an explicit enough statement of expected outcome, constraints and completion conditions to be inspected and verified.
+
+### Open questions
+
+- **OPEN:** What is the smallest useful representation of `Work`?
+- **OPEN:** Is `Intent` distinct from `Work`?
+- **OPEN:** Do specifications belong inside the work model or remain external referenced artifacts?
+- **OPEN:** Is a dependency graph necessary, or are simpler relations sufficient?
+- **OPEN:** Who creates and decomposes work?
+- **OPEN:** Which state transitions must be explicit?
+- **OPEN:** Which work state needs persistence?
+- **OPEN:** Which state must the Work Control Plane own versus reference from elsewhere?
+
+---
+
+## 3. Conceptual responsibilities
+
+The current hypothesis groups possible responsibilities into five analytical areas:
 
 ```text
 Work
@@ -47,61 +137,58 @@ Integration
 Observation
 ```
 
-These are analytical buckets. They are not yet modules, packages, services or APIs.
+These are not modules or services.
 
 ---
 
-## Work
+## 4. Work
 
 ### Problem being investigated
 
-Coding sessions need a way to understand not only *what the user just asked*, but potentially how that request relates to longer-lived project work.
-
-### Candidate concepts
-
-**HYPOTHESIS**
-
-```text
-Intent
-Work
-Dependency
-State
-Outcome
-```
+Coding-agent sessions are effective execution contexts but poor universal project memory. The project needs to determine whether durable work semantics should exist independently from a particular session or client.
 
 Possible responsibilities include:
 
-- preserve the current intent beyond a single conversational turn;
-- represent units of work at a useful granularity;
-- express dependencies where they materially affect execution;
-- determine whether work is ready, blocked, active or complete;
-- connect completion to an explicit outcome rather than a conversational claim;
-- preserve enough history to continue across sessions or clients.
+- preserve relevant intent beyond a single conversational turn;
+- represent work at a useful granularity;
+- express dependencies where they affect readiness;
+- expose ready, blocked, active and complete state where useful;
+- connect work to decisions and constraints;
+- connect completion to outcomes and evidence;
+- make continuity possible across sessions and coding clients.
 
-None of these implies that a custom work graph is required.
+### Source-of-truth hypothesis
+
+**HYPOTHESIS:** The Work Control Plane may not need to own the underlying work substrate.
+
+Possible arrangements include:
+
+```text
+A. Work Control Plane owns minimal work state
+B. Existing substrate is authoritative; AWCP queries/projects it
+C. Multiple systems remain authoritative by concern
+D. AWCP stores only control metadata around external artifacts
+```
+
+No arrangement is preferred yet.
 
 ### Open questions
 
-- **OPEN:** Do we actually need a graph, or are simpler ordered/linked work records sufficient?
-- **OPEN:** What is the useful granularity of `Work`?
-- **OPEN:** Is `Intent` distinct from `Work`, or only metadata on a work item?
-- **OPEN:** Who decomposes work: the human, current coding agent, an upstream tool, control-plane logic, or some combination?
-- **OPEN:** How is `ready` or `blocked` determined without creating a workflow engine?
-- **OPEN:** Which work state, if any, belongs in Git?
-- **OPEN:** Can an upstream substrate such as Beads or Backlog.md provide this model sufficiently?
-- **OPEN:** Does the control plane need to own work state at all, or can it project/query another source of truth?
+- **OPEN:** Can Beads provide enough dependency/readiness semantics?
+- **OPEN:** Can Backlog.md provide enough human-readable work state?
+- **OPEN:** Can Spec Kit or another spec harness serve as the work contract layer?
+- **OPEN:** Is Okto Pulse already sufficiently close to the complete work layer?
+- **OPEN:** Is a custom representation justified at all?
 
 ---
 
-## Governance
+## 5. Governance
 
 ### Problem being investigated
 
-As coding agents receive more execution autonomy, project rules must distinguish between guidance, enforceable constraints, required approvals and evidence of completion.
+More autonomous execution increases the importance of knowing what an executor is allowed to do, what must be verified and when a completion claim is acceptable.
 
-### Candidate concepts
-
-**HYPOTHESIS**
+Candidate concepts:
 
 ```text
 Constraint
@@ -110,122 +197,130 @@ Risk
 Approval
 QualityGate
 Evidence
+CompletionRule
 ```
 
 Possible responsibilities include:
 
-- identify constraints relevant to the current work;
-- classify whether a rule is advisory or technically enforceable;
-- require human approval only where judgment or risk warrants it;
-- define evidence expected before an outcome can be accepted;
-- express quality gates in terms that can be evaluated by available client/tooling surfaces;
-- preserve why a gate passed, failed or was overridden.
+- determine which constraints apply to current work;
+- distinguish advisory guidance from technically enforceable policy;
+- express required approvals where risk or ambiguity warrants them;
+- specify expected verification before completion;
+- record evidence and overrides;
+- prevent a work-state transition to complete when required evidence is missing, where technically possible.
 
-### Guidance vs enforcement
+### Three different guarantees
 
-This distinction must remain explicit:
+The architecture should distinguish at least:
 
 ```text
 guidance
-    ≠
+verification
 enforcement
 ```
 
-A prompt, instruction file or contextual note may influence an agent. It does not by itself create a security or governance boundary.
+These are not interchangeable.
 
-Where a coding client exposes permissions, blocking hooks, policy engines, sandboxes or equivalent mechanisms, those mechanisms may be candidates for enforcement. Where it does not, the control plane must not pretend that guidance is enforceable.
+- **Guidance** tells an executor how it should behave.
+- **Verification** checks an observable result before or after execution.
+- **Enforcement** technically prevents or constrains an action or state transition.
+
+A coding client may support one guarantee but not another.
 
 ### Open questions
 
-- **OPEN:** Which governance rules can be applied technically on each coding client?
-- **OPEN:** Which rules can only be checked after execution?
-- **OPEN:** What belongs to the control plane versus repository CI, tests, linters or the coding client's own safety layer?
-- **OPEN:** How is risk represented, if it needs representation at all?
-- **OPEN:** When is human approval genuinely required?
-- **OPEN:** What does `done` mean for different classes of work?
-- **OPEN:** What constitutes sufficient `Evidence`?
-- **OPEN:** Can evidence be derived from existing commands/events rather than creating a separate reporting system?
+- **OPEN:** Which governance belongs in AWCP versus Git/CI/tests/linters/client sandboxing?
+- **OPEN:** Does risk need explicit representation?
+- **OPEN:** What constitutes sufficient evidence for different work classes?
+- **OPEN:** Is completion decided by deterministic gates, an agent judgment, a human judgment or some combination?
 
 ---
 
-## Capabilities
+## 6. Capabilities
 
 ### Problem being investigated
 
-Many current agentic methodologies encode execution as a sequence of named agents or personas. That risks coupling a semantic need of the work to a particular prompt, model or client implementation.
+Agentic-development systems often bind work semantics directly to named agents or workflow stages. AWCP should test whether a more portable abstraction is to describe **what capability the work requires** and leave executor realization separate.
 
-### Capability-driven hypothesis
+### Capability requirement hypothesis
 
-**HYPOTHESIS**
+**HYPOTHESIS:** Work may carry semantic capability requirements independent from a particular executor.
 
 ```text
 work
   ↓
-semantic classification
+requirements / risk / uncertainty
   ↓
-required capabilities
+required capability
   ↓
 executor resolution
+  ↓
+contribution + evidence
 ```
 
-Candidate capability names for experiments might include:
+Provisional capability examples:
 
 ```text
 explore
 research / reason
-build
+implement
 debug
 review
 verify
 document
 ```
 
-The set is intentionally provisional.
+The vocabulary is intentionally not accepted.
 
-The core distinction is:
+The key separation remains:
 
 ```text
 WORK CAPABILITY ≠ AGENT ROLE ≠ MODEL
 ```
 
-For example, a requirement for independent verification might be fulfilled by:
+A `verify` requirement might be satisfied by:
 
-- a native subagent in one client;
-- a second pass in the current client;
-- a deterministic test/linter/CI command;
-- an external specialized tool;
-- a human reviewer;
-- some combination of these.
+- deterministic tests;
+- CI;
+- a native coding-client subagent;
+- a second review pass;
+- a specialized external tool;
+- a human;
+- a combination of the above.
 
-The semantic requirement should not automatically become a permanent `VerifierAgent` abstraction.
+### Executor is not necessarily an agent
 
-### Adaptive orchestration hypothesis
+This is a direct consequence of centering the architecture on work rather than agents.
 
-**HYPOTHESIS:** The structure required for a piece of work should derive from its type, uncertainty, risk and verification needs rather than from a mandatory global pipeline.
+Possible executors/contributors include:
 
-This does not yet imply a classifier, rule engine, LLM router, workflow DSL or scheduler. The smallest useful experiment should first test whether capability-based reasoning produces better execution decisions than a fixed workflow.
+```text
+coding agent
+human
+test runner
+linter
+CI job
+security scanner
+external tool
+```
 
 ### Open questions
 
-- **OPEN:** Is an explicit capability model useful enough to justify a new abstraction?
-- **OPEN:** Which capabilities are semantic and stable across clients?
-- **OPEN:** Can capability resolution mostly reuse native client functionality?
-- **OPEN:** Who resolves an executor?
-- **OPEN:** Does resolution require a model, deterministic rules, user choice, or a mixture?
-- **OPEN:** How should cost, latency, risk and confidence influence resolution, if at all?
-- **OPEN:** How can repair/retry occur without the control plane becoming an agent runtime?
+- **OPEN:** Is an explicit capability model useful enough to justify itself?
+- **OPEN:** Which capabilities remain stable across clients?
+- **OPEN:** Who or what resolves capability requirements to executors?
+- **OPEN:** Is executor resolution merely advisory to the current coding client?
+- **OPEN:** At what point would executor resolution become orchestration and violate the runtime boundary?
 
 ---
 
-## Integration
+## 7. Integration
 
 ### Boundary
 
-**BOUNDARY:** Existing coding clients remain the user's primary interaction surface. Client-specific behavior belongs behind an integration boundary rather than leaking into the shared conceptual model.
+**BOUNDARY:** Client-specific integration must implement shared work semantics using supported surfaces without pretending that all clients provide equivalent guarantees.
 
-### Supported-surface hypothesis
-
-**HYPOTHESIS:** Useful integration can be built by composing only surfaces that each coding client officially supports, such as some subset of:
+Potential surfaces include some subset of:
 
 ```text
 hooks
@@ -241,188 +336,270 @@ events / telemetry
 wrappers
 ```
 
-No assumption is made that every client supports every surface or that similarly named surfaces provide equivalent guarantees.
+No mechanism is selected.
 
-### Integration asymmetry
+### Semantic adapter hypothesis
 
-A central architectural risk is **capability asymmetry across clients**.
+**HYPOTHESIS:** An adapter may be better modeled around semantic capabilities than around a uniform protocol.
 
-One client may expose synchronous pre-tool hooks capable of blocking an operation. Another may expose sandbox/approval configuration but no equivalent generic hook lifecycle. Another may expose a plugin API with a different stability contract.
+For a requested interaction, the adapter may need to expose what guarantee it can provide. A provisional vocabulary for investigation is:
 
-Therefore:
+```text
+ENFORCEABLE
+OBSERVABLE
+INJECTABLE
+GUIDANCE_ONLY
+UNSUPPORTED
+```
 
-- integration portability must be defined semantically, not as identical mechanisms;
-- the core may request `enforce constraint X`, but an adapter must report whether that is actually enforceable on its host;
-- unsupported capabilities must degrade explicitly rather than silently;
-- client adapters must not rely on undocumented internals merely to achieve apparent parity.
+This vocabulary is not accepted architecture; SPIKE-001 should determine whether distinctions like these are useful.
 
-### The "must run" problem
+### Example
 
-The desired system should participate automatically when enabled, but **OPEN:** whether that can be guaranteed uniformly across clients is not yet established.
+Suppose the work requires:
 
-There is an important difference between:
+```text
+Constraint: tests must pass before completion
+```
 
-1. an optional tool the model may choose to call;
-2. instructions that tell the model to consult the control plane;
-3. a client-native lifecycle hook that invokes it deterministically;
-4. a permission/policy surface that can block an action;
-5. an external wrapper that ensures execution but changes the launch/runtime boundary.
+Different hosts might realize that as:
 
-SPIKE-001 must determine which of these are available and acceptable per client before "always executes" can become a real invariant.
+```text
+client A → blocking lifecycle hook
+client B → permission/policy integration
+client C → post-execution verification only
+client D → contextual instruction only
+```
+
+The semantic requirement remains stable while the available guarantee changes.
+
+### The mandatory-participation problem
+
+The desired system should participate automatically when enabled, but that is not yet established as a portable invariant.
+
+There is a material difference between:
+
+1. an MCP tool the model may choose to call;
+2. instructions asking the model to consult work state;
+3. a client-native lifecycle hook that invokes AWCP deterministically;
+4. a policy/permission surface capable of blocking behavior;
+5. an external wrapper that guarantees invocation but changes the launch boundary.
+
+SPIKE-001 must determine which combinations are actually supported and acceptable for Claude Code, Codex, OpenCode and Gemini CLI.
 
 ### Open questions
 
-- **OPEN:** What is the minimum integration contract shared by all target clients?
-- **OPEN:** Is MCP useful for querying state but insufficient for mandatory lifecycle behavior?
-- **OPEN:** Which clients provide deterministic pre/post action hooks?
-- **OPEN:** Which policies can be installed at project, user or managed scope?
-- **OPEN:** Do adapters need a wrapper for any client, and would that violate the desired transparent experience?
-- **OPEN:** How are client versions/capabilities discovered without brittle assumptions?
-- **OPEN:** How should adapter degradation be surfaced to humans and agents?
+- **OPEN:** What is the minimum semantic integration contract?
+- **OPEN:** Which clients support deterministic pre/post lifecycle participation?
+- **OPEN:** Which clients support only context/tool exposure?
+- **OPEN:** Is MCP useful primarily as a query/action surface rather than an enforcement mechanism?
+- **OPEN:** Are wrappers acceptable for any client?
+- **OPEN:** How should degraded integration guarantees be surfaced?
 
 ---
 
-## Observation
+## 8. Evidence and completion
 
-### Problem being investigated
+Centering the architecture on work suggests that **evidence may be more important than execution telemetry**.
 
-If significant work state and governance move outside a conversation, humans need a way to inspect that state without changing their primary coding interface.
+### Hypothesis
 
-### Projection hypothesis
+**HYPOTHESIS:** AWCP should retain or reference externally inspectable evidence that supports meaningful work-state transitions.
 
-**HYPOTHESIS:** The core should expose enough state or events to be observed through multiple projections, potentially including:
+Potential evidence might include:
+
+- test results;
+- lint/type-check results;
+- build output;
+- changed files or commits;
+- review findings;
+- benchmark results;
+- human approval;
+- generated artifacts;
+- external system responses.
+
+This should not become a mechanism for storing hidden reasoning or chain-of-thought.
+
+### Completion hypothesis
+
+```text
+agent says "done"
+        ≠
+work is complete
+```
+
+Completion may instead mean:
+
+```text
+expected outcome exists
++ required verification executed
++ required evidence exists
++ blocking constraints satisfied
++ required approvals resolved
+```
+
+The exact semantics must be discovered per work class rather than universalized prematurely.
+
+---
+
+## 9. Observation
+
+If work state and governance persist outside a chat session, humans need direct visibility into that state.
+
+**HYPOTHESIS:** AWCP should expose enough state for multiple observers or projections, potentially including:
 
 ```text
 CLI
-structured output (for example JSON)
+JSON / structured queries
 TUI
 other local tooling
 ```
 
-The TUI, if built, should be only one projection.
+Potentially observable information:
 
-Potentially observable information includes:
-
-- current intent;
-- work and dependencies;
-- ready / blocked / running state;
-- required capabilities and chosen executors;
+- intent;
+- current work;
+- dependencies and readiness;
+- constraints and gates;
+- required capabilities;
+- current executor where known;
+- evidence;
+- completion state;
 - pending human decisions;
-- constraints and quality gates;
-- evidence and verification results;
-- failures and repair attempts;
-- progress;
-- telemetry or cost data when available from upstream tools.
+- failures and unresolved verification;
+- derived telemetry where useful.
 
-### Open questions
-
-- **OPEN:** What events are genuinely useful enough to justify an event model?
-- **OPEN:** Can observation begin as on-demand state queries instead of a continuous event stream?
-- **OPEN:** What state is authoritative versus derived?
-- **OPEN:** What edits, if any, should an observer surface allow?
-- **OPEN:** How are conflicts handled if a human edits state while a client is executing?
+The TUI remains optional and owns no independent state.
 
 ---
 
-## Persistence and concurrency
+## 10. Persistence and concurrency
 
-Persistence is a requirement at the conceptual level only insofar as the project is investigating **cross-session work continuity**. Its implementation remains open.
+Persistence is justified only where durable work continuity or governance requires it.
 
-Questions to validate before selecting storage or lifecycle technology:
+Questions to validate before choosing storage or lifecycle technology:
 
+- **OPEN:** which work/control state needs durability;
 - **OPEN:** on-demand core versus resident process;
 - **OPEN:** one active client versus concurrent clients;
-- **OPEN:** locking or optimistic concurrency requirements;
+- **OPEN:** locking or optimistic concurrency;
 - **OPEN:** need for an event stream;
 - **OPEN:** crash recovery semantics;
-- **OPEN:** stale execution detection;
-- **OPEN:** state ownership;
+- **OPEN:** stale execution/work detection;
 - **OPEN:** private local state versus Git-versioned state;
-- **OPEN:** Windows process/filesystem behavior;
-- **OPEN:** queries and invariants that a storage mechanism must support.
+- **OPEN:** cross-platform filesystem/process behavior;
+- **OPEN:** queries and invariants the storage layer must support.
 
-A database should not be selected before these questions produce concrete requirements.
+A database should not be selected before these requirements exist.
 
-## Source of truth
+---
 
-**OPEN:** The project does not yet know whether it needs one unified source of truth.
+## 11. Relationship to Agent Control Planes
 
-Possible arrangements include, without preference:
-
-- a control-plane-owned minimal work model;
-- an upstream work substrate used directly;
-- repository files;
-- Git-versioned and private state split by concern;
-- a derived projection over multiple authoritative systems.
-
-The term `Persistent Work State` in the conceptual diagram means only that continuity must exist somewhere if the hypothesis proves useful. It does not select a storage format or ownership model.
-
-## Candidate validation spikes
-
-These are expected research experiments, not designs and not yet separate documents.
-
-### SPIKE-001 — Client integration surfaces
-
-Determine what can actually be observed, injected and enforced through supported surfaces in Claude Code, Codex, OpenCode and Gemini CLI.
-
-Expected output: an evidence-backed capability matrix distinguishing guidance from enforcement.
-
-### SPIKE-002 — Work substrate
-
-Compare at least Beads, Backlog.md, simple repository files and a minimal custom representation.
-
-Expected output: evidence for whether the control plane needs to own a work model at all.
-
-### SPIKE-003 — Adaptive control loop
-
-Test the smallest possible loop:
+Agent Control Planes and Agentic Work Control Plane may eventually coexist because they operate on different primary objects.
 
 ```text
-user intent
-  ↓
-classify work
-  ↓
-determine required capability
-  ↓
-resolve / guide executor
-  ↓
-verify
-  ↓
-repair, retry or escalate
-  ↓
-record outcome
+                    Software Work
+                         │
+             Agentic Work Control Plane
+                         │
+                requirements / gates
+                         │
+                         ▼
+                 Execution actors
+              agents · humans · tools
+                         ▲
+                         │
+               Agent Control Plane
+                         │
+       identity · lifecycle · fleet · runtime
 ```
 
-Expected output: evidence for whether capability-driven execution is a useful abstraction. Do not build a workflow engine to run this experiment.
+This diagram does not mean AWCP should integrate with an enterprise Agent Control Plane. It only clarifies the abstraction boundary.
+
+---
+
+## 12. Candidate validation spikes
+
+These are research experiments, not implementation plans.
+
+### SPIKE-001 — Coding-client integration guarantees
+
+Determine what can actually be injected, observed, verified and enforced through supported surfaces in Claude Code, Codex, OpenCode and Gemini CLI.
+
+Expected output: an evidence-backed matrix of semantic integration guarantees.
+
+### SPIKE-002 — Work substrate and ownership
+
+Compare at least:
+
+```text
+Beads
+Backlog.md
+Spec Kit composition
+Okto Pulse
+simple repository files
+minimal custom representation
+```
+
+Expected output: evidence for whether AWCP needs to own a work model at all.
+
+### SPIKE-003 — Minimal adaptive work-control loop
+
+Test the smallest useful sequence:
+
+```text
+human intent
+  ↓
+resolve relevant work state
+  ↓
+determine constraints / capability requirements
+  ↓
+current coding client executes
+  ↓
+collect / run verification
+  ↓
+record evidence
+  ↓
+accept, repair or escalate
+```
+
+The experiment should deliberately avoid building a workflow engine or agent runtime.
 
 ### SPIKE-004 — Persistence and concurrency
 
-Test the lifecycle and consistency requirements that would determine storage and process architecture.
+Test lifecycle and consistency requirements that would determine whether AWCP needs files, a database, an on-demand process, a daemon or some other mechanism.
 
-Expected output: requirements for runtime/persistence choices, not a premature implementation.
+---
 
-## Architecture discipline
+## 13. Architecture discipline
 
-Before introducing a component or abstraction, ask:
+Before introducing a concept, component or owned state, ask:
 
-1. What observable problem does it solve?
+1. What observable work problem does it solve?
 2. Does the coding client already solve it?
-3. Does an upstream tool already solve it?
-4. Does the control plane need to own this state?
-5. Does the state need to persist?
-6. Is a new abstraction necessary?
-7. Can the uncertainty be resolved by a smaller spike first?
-8. Is the design serving a real developer workflow or a hypothetical platform?
+3. Does an existing work/spec tool already solve it?
+4. Is the concern about **work** or are we accidentally managing **agents**?
+5. Does AWCP need to own this state?
+6. Does the state need to persist?
+7. Is a new abstraction necessary?
+8. Can the uncertainty be resolved by a smaller spike?
+9. Are we preserving the coding client's execution ownership?
+10. Is this serving a real developer workflow or an imagined platform?
 
 Avoid especially:
 
+- agent-fleet features disguised as work governance;
 - multi-agent theatre;
 - role names that merely wrap prompts;
+- workflow engines before repeated workflows are demonstrated;
 - dashboards before useful observable state exists;
-- a daemon before background state is demonstrated as necessary;
-- a database before queries and invariants are known;
-- schemas before the semantic model is stable enough to justify them;
+- daemon-first architecture;
+- database-first architecture;
+- schemas before semantic invariants are known;
 - MCP as a universal answer;
-- a workflow DSL before repeated workflows are demonstrated;
-- premature cross-platform uniformity;
-- autonomy without verification.
+- forced worktrees;
+- premature cross-client uniformity;
+- hidden automation without inspectable state;
+- autonomy without verification;
+- owning state simply because integration is easier that way.
