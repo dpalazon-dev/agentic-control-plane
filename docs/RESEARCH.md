@@ -2,34 +2,105 @@
 
 ## Status and scope
 
-This document asks one question:
+This document asks:
 
-> **What can we reuse, and what remains unsolved?**
+> **What parts of agentic software work are already solved, what can be composed, and what remains unsolved enough to justify an Agentic Work Control Plane?**
 
-It is not a catalog of AI-development tools and it is not evidence that a new product must exist.
+It is not a catalog of AI-development tools and it does not assume that a new product needs to exist.
 
-The research snapshot was refreshed on **2026-08-09** using project documentation, official repositories and recent papers where possible. External systems are evolving quickly; claims about them should be revalidated during the relevant spike before they become architecture.
+Research snapshot refreshed on **2026-08-09** using official documentation, official repositories and recent papers where possible. External systems are moving quickly; claims about current products must be revalidated during the relevant spike before becoming architecture.
 
 ### Evidence labels
 
-- **FACT** — directly supported by a cited primary source or paper.
-- **INFERENCE** — interpretation derived from the cited evidence.
-- **HYPOTHESIS** — proposition that `agentic-control-plane` still needs to test.
+- **FACT** — directly supported by a cited source.
+- **INFERENCE** — interpretation of one or more facts.
+- **HYPOTHESIS** — proposition this project still needs to test.
 - **DECISION** — accepted project boundary; authoritative decisions live in [`DECISIONS.md`](DECISIONS.md).
 
 ---
 
-# 1. Research baseline
+# 1. Naming correction: Agent Control Plane is a different category
 
-## 1.1 There is convergence, but not a single replacement for Scrum
+The initial project name, `agentic-control-plane`, was too broad and increasingly conflicts with an emerging industry meaning.
 
-**FACT:** A June 2026 comparative study of GitHub Spec Kit, OpenSpec, BMAD, GSD, Spec Kitty and Reversa found convergence away from isolated prompting and toward persistent artifacts, work contracts, traceability and human review. Its six-dimensional taxonomy covers specification, context, roles, execution, validation and portability. The authors also report that no evaluated framework strongly covered all six dimensions, exposing a trade-off between process depth and portability.
+## 1.1 What current Agent Control Planes control
+
+**FACT:** IBM defines an agent control plane as the system that deploys, operates, monitors and governs AI agents across an organization. Individual agents operate in a data plane where they execute tasks and interact with tools, while the control plane handles system-level governance and coordination.
+
+Sources:
+
+- [IBM — What is an Agent Control Plane?](https://www.ibm.com/think/topics/agent-control-plane)
+- [IBM watsonx Orchestrate — Agent Control Plane](https://www.ibm.com/products/watsonx-orchestrate/agent-control-plane)
+
+**FACT:** Microsoft Foundry Control Plane similarly centralizes management of AI agents, models and tools across an enterprise. Its documented concerns include agent inventory, fleet management, observability, compliance, security and lifecycle operations.
+
+Sources:
+
+- [Microsoft Foundry Control Plane overview](https://learn.microsoft.com/en-us/azure/foundry/control-plane/overview)
+- [Manage agents at scale in Microsoft Foundry Control Plane](https://learn.microsoft.com/en-us/azure/foundry/control-plane/how-to-manage-agents)
+
+**INFERENCE:** `Agent Control Plane` is converging on a category whose primary managed object is the **agent estate**:
+
+```text
+agents
+models
+tools
+identity
+permissions
+deployment
+runtime health
+cost
+fleet operations
+policy
+```
+
+That is not the primary object investigated by this project.
+
+## 1.2 The object here is software work
+
+The project instead asks whether software work performed through heterogeneous coding agents needs durable structure and governance independent of any single coding client.
+
+A useful category distinction is:
+
+```text
+Agent Control Plane
+    governs → agents / agent infrastructure
+
+Agentic Work Control Plane
+    governs → software work performed with agents
+```
+
+Candidate work concerns are:
+
+```text
+intent
+specification / work contract
+work units
+dependencies
+constraints
+decisions
+capability requirements
+evidence
+verification
+completion
+continuity
+```
+
+**DECISION:** The project is therefore reframed as **Agentic Work Control Plane (AWCP)**.
+
+This naming distinction does not prove that the category is novel. It only identifies the object of control more accurately.
+
+---
+
+# 2. Research baseline: software development is converging around explicit work artifacts
+
+## 2.1 No single "AI Scrum" is emerging
+
+**FACT:** A June 2026 comparative study of GitHub Spec Kit, OpenSpec, BMAD, GSD, Spec Kitty and Reversa found convergence away from isolated prompting and toward persistent artifacts, work contracts, traceability and human review. Its taxonomy compares specification, context, roles, execution, validation and portability, and reports that no evaluated framework strongly covers every dimension.
 
 Source: [From Prompt to Process: a Process Taxonomy and Comparative Assessment of Frameworks Supporting AI Software Development Agents](https://arxiv.org/abs/2606.04967).
 
-**INFERENCE:** The useful emerging object is not a single "AI Scrum" ceremony set. It is a development system composed from mechanisms that make intent, context, work, execution and verification explicit enough for agents to operate reliably.
-
-A useful synthesis for this project remains:
+**INFERENCE:** The useful emerging pattern is not a new ceremony framework but an increasingly explicit delivery chain:
 
 ```text
 Intent
@@ -38,654 +109,367 @@ Specification / work contract
   ↓
 Persistent work structure
   ↓
-Agent execution
+Execution
   ↓
-Automated verification
+Verification
   ↓
 Evidence
   ↓
-Merge / outcome
+Outcome / merge
   ↓
-Persistent project memory
+Persistent project knowledge
 ```
 
-This is a description of convergence, not a proposed ACP workflow.
+This is evidence of convergence, not an AWCP workflow design.
 
-## 1.2 Harness engineering moves reliability outside the model
+## 2.2 Harness engineering moves reliability outside the model
 
-**FACT:** OpenAI describes an agent-first engineering experience in which human effort shifts from directly writing code toward designing environments, specifying intent and building feedback loops. The report explicitly notes that early failures were often caused by an underspecified environment lacking the tools, abstractions and internal structure needed by the agent.
+**FACT:** OpenAI's harness-engineering account describes an agent-first engineering environment in which human effort shifts toward specifying intent, structuring the environment and building feedback loops. Early failures were often caused not simply by model capability but by insufficient tools, abstractions and repository structure.
 
-Source: [Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/).
+Source: [OpenAI — Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/).
 
-**FACT:** Recent research formalizes the coding harness as the layer mediating models, tools and execution environments. Agentic Harness Engineering (AHE) reports that improvements came primarily from tools, middleware and long-term memory rather than from the system prompt alone, and emphasizes observability of components, experience and decisions.
+**FACT:** Recent research on agentic harness engineering treats tools, middleware, memory, task state, observability, verification and intervention handling as important parts of a reliable coding-agent system.
 
-Source: [Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses](https://arxiv.org/abs/2604.25850).
+Sources:
 
-**FACT:** Another 2026 harness paper proposes eleven recurring runtime responsibilities: task specification, context selection, tool access, project memory, task state, observability, failure attribution, verification, permissions, entropy auditing and intervention recording.
+- [Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses](https://arxiv.org/abs/2604.25850)
+- [AI Harness Engineering: A Runtime Substrate for Foundation-Model Software Agents](https://arxiv.org/abs/2605.13357)
 
-Source: [AI Harness Engineering: A Runtime Substrate for Foundation-Model Software Agents](https://arxiv.org/abs/2605.13357).
+**INFERENCE:** Reliability increasingly belongs to the system formed by **model + harness + development environment**, not to the prompt alone.
 
-**INFERENCE:** The user's original intuition is directionally consistent with current research: reliability is increasingly a property of the **model + harness + environment**, not the model or prompt in isolation. However, those papers generally study or define harnesses around an agent runtime. ACP is asking a narrower architectural question: can useful harness-level responsibilities be projected **across existing coding clients without owning their agent loop?**
+However, these harnesses often assume ownership of or proximity to the agent runtime. AWCP asks a narrower question:
 
-## 1.3 Spec-driven development is becoming process infrastructure
+> Can project-level work structure and governance be made persistent and portable **without owning the coding agent's loop?**
 
-**FACT:** Contemporary Spec-Driven Development treats specifications as increasingly authoritative artifacts rather than disposable prompting material. The 2026 SDD survey distinguishes spec-first, spec-anchored and spec-as-source levels of rigor.
+## 2.3 Spec-driven development is becoming infrastructure rather than documentation
 
-Source: [Spec-Driven Development: From Code to Contract in the Age of AI Coding Assistants](https://arxiv.org/abs/2602.00180).
+**FACT:** Recent work on Spec-Driven Development distinguishes increasingly authoritative uses of specifications and studies linked artifacts across specification, planning, tasks, implementation and verification.
 
-**FACT:** Experimental work around Spec Kit has tested repository-grounding hooks between specification, planning, tasks and implementation, with phase-level validation against repository evidence.
+Sources:
 
-Source: [Spec Kit Agents: Context-Grounded Agentic Workflows](https://arxiv.org/abs/2604.05278).
+- [Spec-Driven Development: From Code to Contract in the Age of AI Coding Assistants](https://arxiv.org/abs/2602.00180)
+- [Spec Kit Agents: Context-Grounded Agentic Workflows](https://arxiv.org/abs/2604.05278)
 
-**INFERENCE:** Specifications alone are not the interesting architectural endpoint. The stronger pattern is a chain of linked artifacts plus grounding, execution and verification. ACP should therefore avoid equating "persistent work structure" with "write a better PRD".
+**INFERENCE:** AWCP should not equate persistent work with "a better PRD". The important pattern is the relationship between intent, executable work, constraints, outcomes and evidence.
 
 ---
 
-# 2. Work substrates
+# 3. The closest direct comparable: Okto Pulse
 
-Work substrates are relevant because ACP may need durable units of work, dependencies, readiness and history. The first question is not which one to adopt; it is whether ACP should own such a substrate at all.
+The reframing around **work rather than workers** makes OktoLabs especially important.
 
-## 2.1 Beads / `bd`
+## 3.1 Pulse organizes work; Nexus organizes workers
+
+**FACT:** OktoLabs explicitly separates two layers:
+
+- **Pulse** organizes the work through specifications, tasks, acceptance criteria, validation and project knowledge.
+- **Nexus** organizes the workers through ownership, handoffs, approvals, shared context and durable coordination history.
+
+Source: [Okto Pulse](https://pulse.oktolabs.ai/).
+
+Their published formulation is effectively:
+
+```text
+Pulse → work
+Nexus → workers
+```
+
+This independently mirrors the distinction AWCP is now making between a **Work Control Plane** and an **Agent Control Plane / agent coordination layer**.
+
+## 3.2 Pulse capabilities
+
+**FACT:** OktoLabs describes Pulse as a local-first, spec-driven project board/workbench for AI-assisted software work with native MCP support.
+
+Sources:
+
+- [OktoLabs — About](https://oktolabs.ai/about/)
+- [Okto Pulse](https://pulse.oktolabs.ai/)
+- [okto-pulse on PyPI](https://pypi.org/project/okto-pulse/)
+
+Documented characteristics include:
+
+- local-first state;
+- structured ideation, refinement, specifications, tasks, tests and bugs;
+- acceptance criteria and validation gates;
+- traceability between artifacts;
+- persistent project knowledge;
+- MCP-native agent access;
+- a human-visible board;
+- explicit evidence/validation concepts.
+
+**INFERENCE:** Pulse is currently one of the closest implementations to the *experience* AWCP is investigating.
+
+This changes the burden of proof. AWCP cannot justify itself merely by saying:
+
+> "Agents need persistent tasks, specifications, governance, evidence and a local UI."
+
+Pulse already demonstrates a coherent implementation of much of that proposition.
+
+## 3.3 What still needs comparison
+
+Pulse is intentionally opinionated and spec-driven. Its published workflow includes explicit stages such as ideation, refinement, specification, sprint, tasks and validation.
+
+AWCP currently hypothesizes a potentially thinner layer in which:
+
+- the work substrate may be external;
+- no single methodology is mandatory;
+- capabilities may be derived from work rather than fixed workflow stages;
+- the existing coding client remains the primary interaction surface;
+- critical integration may need stronger lifecycle participation than voluntary MCP tool usage;
+- work semantics should remain portable even if different clients provide different guarantees.
+
+**HYPOTHESIS:** A meaningful AWCP gap exists only if experiments show that these differences matter enough to justify a distinct layer rather than configuring or extending Pulse.
+
+SPIKE-002 must therefore treat Pulse as a **falsification candidate**, not merely inspiration.
+
+---
+
+# 4. Work substrates
+
+These systems matter because AWCP may need durable work, dependency, readiness and history semantics. The first question is not which substrate to adopt; it is whether AWCP should own one at all.
+
+## 4.1 Beads / `bd`
 
 Primary source: [gastownhall/beads](https://github.com/gastownhall/beads).
 
-**FACT — problem solved:** Beads describes itself as a distributed graph issue tracker and persistent structured memory for coding agents.
+**FACT:** Beads provides structured persistent work/issue state for coding agents, including dependency relationships and ready-work queries.
 
-**FACT — source of truth / persistence:** Current Beads uses a Dolt-backed, versioned data model rather than plain Markdown task files.
+Relevant reusable patterns include:
 
-**FACT — work model:** It provides issue/work records, dependency relationships and graph links.
-
-**FACT — ready work:** `bd ready` lists tasks without open blockers.
-
-**FACT — concurrency:** Hash-based IDs, claim operations and the underlying versioned data model are explicitly designed for multi-agent/multi-branch use.
-
-**FACT — agent integration:** Current setup supports client-oriented installation patterns for Codex and Claude, including instructions/hooks where appropriate.
-
-**What ACP could reuse:**
-
-- dependency-aware work graph semantics;
+- dependency-aware work graphs;
 - ready/blocked calculation;
-- atomic claiming/concurrency ideas;
-- persistent agent memory patterns;
-- machine-readable CLI behavior;
-- client bootstrap patterns.
+- durable machine-queryable work state;
+- concurrency and claiming patterns;
+- coding-agent bootstrap/integration patterns.
 
-**What remains missing for ACP:**
+**INFERENCE:** Beads may already solve a substantial portion of AWCP's candidate `Work` responsibility.
 
-- Beads is principally a work/memory substrate, not a client-neutral governance layer;
-- it does not by itself define ACP's capability semantics, cross-client enforcement contract or evidence model;
-- adopting it as source of truth would import a substantial storage and synchronization choice before ACP knows its required queries and invariants.
+What it does not automatically answer is whether AWCP needs:
 
-**INFERENCE:** Beads may already solve a large fraction of `Work`. That is an argument for testing it in SPIKE-002, not for wrapping it or reimplementing it now.
+- work governance beyond issue state;
+- evidence semantics;
+- client-neutral enforcement guarantees;
+- a capability requirement layer;
+- explicit cross-client continuation semantics.
 
-## 2.2 Backlog.md
+**Research consequence:** test Beads directly before inventing a work graph.
+
+## 4.2 Backlog.md
 
 Primary source: [MrLesk/Backlog.md](https://github.com/MrLesk/Backlog.md).
 
-**FACT — problem solved:** Backlog.md is a Markdown-native task manager and Kanban visualizer designed for collaboration between humans and AI agents.
+**FACT:** Backlog.md stores human-readable project-local work in Markdown and supports tasks, acceptance criteria, Definition of Done, milestones, dependencies, plans, comments and decisions, with CLI/MCP access for coding agents.
 
-**FACT — source of truth / persistence:** Work is stored as human-readable project-local Markdown, with Git optional.
+Relevant reusable patterns:
 
-**FACT — work model:** It supports task descriptions, acceptance criteria, Definition of Done, milestones, dependencies, plans, comments and decisions.
+- machine-readable state that remains directly human-readable;
+- acceptance criteria as explicit work contract;
+- local-first persistence;
+- stable CLI/JSON interaction;
+- multi-client agent discovery/integration.
 
-**FACT — agent integration:** It exposes CLI and MCP workflows and provides setup guidance for multiple coding agents including Claude Code, Codex and Gemini CLI.
+**INFERENCE:** Backlog.md is a strong falsification test for the claim that AWCP needs a custom work schema or database.
 
-**FACT — UI:** It includes terminal board and local browser views.
-
-**What ACP could reuse:**
-
-- the idea that machine-readable work state can remain directly human-readable;
-- acceptance criteria and DoD as explicit work contracts;
-- local-first task persistence;
-- stable JSON/CLI query surfaces;
-- integration instructions that allow agents to discover the work protocol.
-
-**What remains missing for ACP:**
-
-- it is intentionally a task/project-management substrate rather than a generalized governance/control layer;
-- MCP/instructions make the work model available to agents but do not prove mandatory lifecycle participation;
-- execution capability routing, client-specific enforcement and evidence semantics are not its central abstraction.
-
-**INFERENCE:** Backlog.md is a strong test of whether ACP can avoid inventing its own work schema while preserving human readability.
-
-## 2.3 Task Master AI
+## 4.3 Task Master AI
 
 Primary source: [eyaltoledano/claude-task-master](https://github.com/eyaltoledano/claude-task-master).
 
-**FACT — problem solved:** Task Master provides AI-assisted task management, dependencies, tags/workstreams, research commands, MCP/CLI integration and model configuration.
+Task Master combines task/dependency management with AI-assisted decomposition, research and execution-oriented features.
 
-**FACT — model/runtime boundary:** Several Task Master operations invoke AI providers directly. Its newer loop functionality can run Claude Code iteratively for automated task execution.
+Useful lessons:
 
-**What ACP could reuse:**
+- work decomposition patterns;
+- dependencies and ready work;
+- integration between task state and coding agents.
 
-- task decomposition and dependency patterns;
-- separation of main/research/fallback model responsibilities as a reference pattern;
-- ready/blocking work concepts;
-- practical lessons from integrating task state with coding clients.
+Boundary mismatch:
 
-**What conflicts with ACP's boundary:**
+- model-provider configuration and model invocation are more central than AWCP currently intends;
+- execution loops move toward owning the runtime/orchestration boundary.
 
-- direct model-provider configuration is not intended as ACP's primary responsibility;
-- an execution loop that launches the coding agent moves toward owning orchestration/runtime behavior ACP explicitly wants to avoid.
-
-**INFERENCE:** Task Master is useful comparative evidence but is not the desired architectural layer.
-
-## Work-substrate conclusion
-
-**Partially solved:** persistent tasks, dependencies, ready work, acceptance criteria and local/machine-readable state already have credible implementations.
-
-**Still uncertain:** whether ACP needs a separate `Work` abstraction, whether a graph is necessary, and whether ACP should own or merely query/project an existing substrate.
+**INFERENCE:** useful comparative evidence, but not the target abstraction.
 
 ---
 
-# 3. Spec and development methodology systems
+# 5. Spec and development-process systems
 
-These projects matter because they increasingly provide process, artifacts, context and some governance around existing coding agents.
+These projects increasingly provide structured work and governance around existing coding agents.
 
-## 3.1 GitHub Spec Kit
+## 5.1 GitHub Spec Kit
 
-Primary sources: [Spec Kit documentation](https://github.github.io/spec-kit/) and [github/spec-kit](https://github.com/github/spec-kit).
+Primary sources:
 
-**Important update:** Earlier descriptions of Spec Kit as primarily a spec-generation toolkit are now incomplete.
+- [Spec Kit documentation](https://github.github.io/spec-kit/)
+- [github/spec-kit](https://github.com/github/spec-kit)
 
-**FACT:** As of the July 2026 documentation, GitHub describes Spec Kit as an **"extensible, intent-driven harness"** that can guide any supported coding agent across an SDLC or other process.
+**FACT:** Current Spec Kit documentation describes the project as an **extensible, intent-driven harness** that can guide coding agents across an SDLC or other process.
 
-**FACT — default work/process:** Its default SDD sequence is `Spec → Plan → Tasks → Implement`, with linked Markdown artifacts.
+Its default flow is:
 
-**FACT — portability:** Current documentation advertises 35 coding-agent integrations and explicitly supports switching between agents.
+```text
+Spec → Plan → Tasks → Implement
+```
 
-**FACT — extension surface:** It now has extensions, presets, workflows and bundles; community extensions include governance-oriented examples such as CI and architecture guards.
+Current documentation also advertises broad coding-agent portability and extension mechanisms.
 
-**FACT — local/offline:** Current docs state that it can operate offline/behind firewalls and across Windows, macOS and Linux.
+**INFERENCE:** Treating Spec Kit merely as a spec generator is obsolete. It is a serious composition candidate for AWCP.
 
-**What ACP could reuse:**
+Potentially reusable:
 
-- integration-adapter architecture across many coding clients;
 - intent-centered artifact flow;
-- templates/checklists/cross-artifact analysis;
-- extensibility and installation patterns;
-- governance extensions as evidence that control concerns can be layered around an existing coding client.
+- templates/checklists and cross-artifact analysis;
+- coding-client integration patterns;
+- extensions/presets/workflows;
+- portable process installation.
 
-**What is not yet shown to be equivalent to ACP:**
+Remaining AWCP questions:
 
-- a general persistent work/dependency substrate independent of a spec workflow;
-- a client-neutral contract for deterministic enforcement across heterogeneous host capabilities;
-- explicit evidence attached to arbitrary work completion as a core semantic primitive;
-- a minimal project-level control state designed to survive arbitrary client/session switching;
-- capability-driven resolution independent of named workflow stages.
+- persistent ready/blocked work independent of a spec phase model;
+- cross-client guarantee semantics for enforcement;
+- evidence as a general work primitive;
+- capability requirements independent of named process stages;
+- minimal control state across arbitrary client/session switching.
 
-**INFERENCE:** Spec Kit is currently one of the closest systems to the ACP hypothesis and must be treated as a serious reuse/composition candidate, not merely inspiration. SPIKE-001 and SPIKE-002 should actively try to falsify the need for ACP by seeing how far Spec Kit plus an existing work substrate can go.
+**HYPOTHESIS:** `Spec Kit + existing work substrate + native client enforcement` may be enough. AWCP must try to prove itself unnecessary before implementing equivalents.
 
-## 3.2 Spec Kitty
+## 5.2 Spec Kitty
 
 Primary source: [Priivacy-ai/spec-kitty](https://github.com/Priivacy-ai/spec-kitty).
 
-**FACT:** Spec Kitty describes a repo-native flow:
+Spec Kitty demonstrates a repo-native governed delivery flow with specifications, work packages, review, acceptance and merge state across multiple coding agents.
 
-```text
-spec → plan → tasks → next → review → accept → merge
-```
+Useful patterns:
 
-**FACT — persistent state:** Specs, plans, work packages, acceptance criteria, review state and merge decisions live in the repository.
+- auditable repo-native work records;
+- explicit work progression;
+- visible review/acceptance gates;
+- multi-client integration.
 
-**FACT — governance:** It explicitly frames itself around governed software factories, visible review gates and auditable delivery state.
+Boundary mismatch:
 
-**FACT — portability:** It integrates with Claude Code, Codex, Gemini, OpenCode and other coding agents.
+- stronger methodology ownership;
+- worktree-centric execution;
+- more opinionated work-package lifecycle than AWCP has justified.
 
-**FACT — execution model:** It uses isolated Git worktrees for parallel implementation and has an explicit runtime progression through work-package lanes.
+**INFERENCE:** It demonstrates that persistent governed work around existing agents is feasible, but does not establish that AWCP's thinner compositional approach is necessary.
 
-**FACT — UI:** It offers a local dashboard.
+## 5.3 GSD / Get Shit Done
 
-**What ACP could reuse:**
+Primary sources:
 
-- repo-native, inspectable governance records;
-- work-package lifecycle and explicit `next` semantics;
-- acceptance/review/merge trail;
-- separation between the coding agent and external mission state;
-- multi-client integration patterns.
+- [gsd-build/get-shit-done](https://github.com/gsd-build/get-shit-done)
+- [GSD architecture](https://github.com/gsd-build/get-shit-done/blob/main/docs/ARCHITECTURE.md)
 
-**What conflicts with ACP's current boundary:**
+GSD provides structured project state, research/planning/execution/verification phases and support for multiple coding runtimes.
 
-- Spec Kitty intentionally owns a stronger delivery methodology;
-- worktrees are a central execution primitive, whereas ACP explicitly does not want to impose them;
-- its mission/work-package lifecycle is more opinionated than ACP has yet justified;
-- it approaches a governed workflow/runtime, while ACP is investigating a thinner semantic control layer.
+Useful patterns:
 
-**INFERENCE:** Spec Kitty demonstrates that much of the desired *experience* is possible today. ACP's differentiation, if any, cannot simply be "persistent agent work + governance + dashboard". It would have to be a thinner, more composable and less workflow-owning layer.
+- file-based continuity across context resets;
+- phase-specific context selection;
+- verification as first-class work;
+- multi-runtime translation/integration.
 
-## 3.3 GSD / Get Shit Done
+Boundary mismatch:
 
-Primary sources: [gsd-build/get-shit-done](https://github.com/gsd-build/get-shit-done) and its [architecture documentation](https://github.com/gsd-build/get-shit-done/blob/main/docs/ARCHITECTURE.md).
+- opinionated process ownership;
+- specialized-agent orchestration;
+- stronger ownership of execution progression than AWCP intends.
 
-**FACT:** GSD is a context-engineering and spec-driven system supporting multiple coding runtimes including Claude Code, OpenCode, Gemini CLI and Codex.
-
-**FACT — persistent state:** It maintains structured project files such as project vision, requirements, roadmap, state, plans, summaries and research so work survives context resets.
-
-**FACT — execution:** Its architecture uses thin orchestrators that spawn specialized agents for research, planning, execution, verification and debugging.
-
-**FACT — verification:** Plans can contain explicit verification and done criteria, and the workflow includes plan checking and post-execution verification.
-
-**What ACP could reuse:**
-
-- file-based state and handoff patterns;
-- context selection by work phase;
-- verification as a first-class phase rather than an afterthought;
-- multi-runtime installation/translation patterns;
-- thin-orchestrator principle.
-
-**What conflicts with ACP's boundary:**
-
-- GSD owns an opinionated methodology and agent orchestration model;
-- named specialized agents are part of its execution architecture;
-- it is intentionally a process layer that moves work through phases, while ACP is testing whether capabilities can be resolved adaptively without a fixed pipeline.
-
-**INFERENCE:** GSD is especially relevant evidence for persistence and context continuity, but ACP should not recreate its workflow under different names.
-
-## 3.4 BMAD Method
+## 5.4 BMAD Method
 
 Primary source: [bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD).
 
-**FACT:** BMAD provides a full AI-driven development lifecycle, 12+ specialized agent personas and 34+ workflows, with scale-adaptive planning and role-based collaboration.
+BMAD is valuable as evidence for complexity/risk-adaptive process and explicit role specialization, but its persona/workflow-heavy architecture conflicts with AWCP's current principle:
 
-**What ACP could reuse:**
+```text
+WORK CAPABILITY ≠ AGENT ROLE ≠ MODEL
+```
 
-- risk/complexity-adaptive planning as a pattern;
-- workflow outputs that progressively build context;
-- explicit test/architecture specializations.
+**INFERENCE:** treat BMAD as a process-pattern library, not a substrate.
 
-**What conflicts with ACP's boundary:**
-
-- role/persona-centric orchestration is a primary abstraction;
-- a large workflow catalog would violate ACP's current minimalism;
-- `Agent responsibility ≠ model policy` and `Capability ≠ Agent ≠ Model` deliberately avoid making named agents the semantic core.
-
-**INFERENCE:** BMAD is useful as a process-pattern library, not as ACP's substrate.
-
-## 3.5 Agent OS
+## 5.5 Agent OS
 
 Primary source: [buildermethods/agent-os](https://github.com/buildermethods/agent-os).
 
-**FACT:** Agent OS focuses on discovering/deploying codebase standards and shaping better specs while working alongside existing AI coding tools.
+Useful patterns include standards discovery, specification improvement and contextual policy injection alongside existing coding tools.
 
-**What ACP could reuse:**
-
-- standards discovery and context injection;
-- the idea that policy/context can be selected according to current work rather than loading everything globally.
-
-**What remains outside its scope:**
-
-- persistent work dependencies/readiness;
-- generalized execution evidence;
-- cross-client enforcement and capability resolution.
-
-## Methodology-system conclusion
-
-**Already solved well enough to reuse:** structured spec/plan/task artifacts, context packaging, client-specific installation, staged verification patterns and many human-review mechanisms.
-
-**Partially solved:** portability of process across coding agents and repository-native governance.
-
-**Potential ACP question:** can those mechanisms be composed without adopting a complete methodology or owning execution flow?
+It appears less focused on persistent work readiness/dependencies, generalized evidence and heterogeneous enforcement guarantees.
 
 ---
 
-# 4. Agent orchestration and supervision systems
+# 6. Agent orchestration and supervision systems
 
-These systems overlap visually with the original TUI idea but often operate at a different layer: they manage sessions, agent processes or multi-agent runtimes.
+These projects are important primarily as a **boundary test**.
 
-## 4.1 Maestro
+They often manage workers, sessions or agent loops rather than the semantic work itself.
 
-Primary source: [RunMaestro/Maestro](https://github.com/RunMaestro/Maestro).
+Examples include:
 
-**FACT:** Maestro is an agent orchestration command center supporting Claude Code, Codex and OpenCode. It describes itself as a pass-through to existing providers while running tasks non-interactively, and provides parallel worktree execution, auto-run and playbooks.
+- Maestro;
+- Agent Deck;
+- Gas Town;
+- Ralph-style iterative loops;
+- session/worktree supervisors;
+- multi-agent coordination buses.
 
-**Useful patterns:**
+Their useful patterns may include:
 
-- preserving native provider configuration while supervising execution;
-- task-to-session mapping;
-- visibility over parallel agent work.
+- visibility into active agent execution;
+- handoffs and ownership;
+- parallel work isolation;
+- retry/recovery;
+- multi-agent scheduling;
+- agent/session lifecycle.
 
-**Boundary mismatch:**
-
-- Maestro becomes a task/session execution surface;
-- it launches and manages agent work non-interactively;
-- worktrees and parallel session orchestration are central features.
-
-**INFERENCE:** Maestro is closer to an orchestration runtime/session manager than to ACP's proposed thin semantic control plane.
-
-## 4.2 Agent Deck
-
-Primary source: [asheshgoplani/agent-deck](https://github.com/asheshgoplani/agent-deck).
-
-**FACT:** Agent Deck is a terminal session manager/command center for multiple coding agents. It tracks session status, groups/switches sessions, manages MCP attachment, supports worktrees and offers cost/status observation.
-
-**Useful patterns:**
-
-- cross-agent status normalization;
-- local observation of heterogeneous clients;
-- extracting telemetry from client-specific surfaces;
-- separating an observer UI from the coding agents themselves.
-
-**Boundary mismatch:**
-
-- the TUI/session manager is the product's central interaction surface;
-- it manages agent sessions and can supervise fleets;
-- ACP explicitly does not want its TUI to become necessary or primary.
-
-**INFERENCE:** Agent Deck is more relevant to a future ACP observer/integration adapter than to ACP's semantic core.
-
-## 4.3 Gas Town / Gas City
-
-Primary source: [gastownhall/gascity](https://github.com/gastownhall/gascity).
-
-**FACT:** Gas City extracts reusable orchestration infrastructure from Gas Town into an SDK with runtime providers, work routing, Beads-backed tracking, declarative configuration and a controller/supervisor loop.
-
-**Useful patterns:**
-
-- work routing separated from runtime providers;
-- explicit orchestration primitives;
-- Beads as an external work substrate;
-- health/reconciliation concepts.
-
-**Boundary mismatch:**
-
-- Gas City intentionally is an orchestration-builder SDK;
-- it owns a supervisor/controller loop and multiple execution runtimes;
-- this is precisely the runtime responsibility ACP currently wants to leave to existing coding clients.
-
-## 4.4 Ralph-style loops
-
-Ralph-style loops are a pattern rather than one canonical implementation: repeatedly provide a task to an agent, execute, inspect results, and continue until a stop/verification condition is met.
-
-**Reusable idea:** verification/repair loops should be explicit and bounded.
-
-**Risk for ACP:** implementing the loop itself would move ACP toward owning the agent runtime. SPIKE-003 should instead test whether ACP can **request or guide** repair through the host client's existing mechanisms.
-
-## Orchestration conclusion
-
-Session/fleet management and multi-agent execution are already well-populated solution spaces. ACP should resist competing there unless research falsifies its current boundary.
-
----
-
-# 5. Coding-agent clients and runtimes
-
-The most important integration fact is not that these clients all "support agents". It is that they expose **different control surfaces with different guarantees**.
-
-## 5.1 Claude Code
-
-Primary sources: [Hooks reference](https://code.claude.com/docs/en/hooks) and [Permissions](https://code.claude.com/docs/en/permissions).
-
-**FACT:** Claude Code exposes lifecycle hooks, including pre/post tool events and permission-related events. Pre-tool hooks can block tool calls, modify inputs, request approval or add context.
-
-**FACT:** Permission rules and hooks have explicit precedence; a blocking hook can prevent an operation even when another rule would otherwise allow it.
-
-**FACT:** Claude Code also supports subagents and project/user/plugin configuration scopes.
-
-**ACP implication:** Claude Code appears to expose strong deterministic integration surfaces for SPIKE-001, including a real distinction between contextual guidance and tool-level enforcement.
-
-## 5.2 Gemini CLI
-
-Primary sources: [Gemini CLI hooks](https://geminicli.com/docs/hooks/) and [Policy engine](https://geminicli.com/docs/reference/policy-engine/).
-
-**FACT:** Gemini CLI hooks execute synchronously inside the agent loop and can inject context, validate/block actions, enforce policies and log interactions.
-
-**FACT:** Its policy engine can allow, deny or require user confirmation for tool execution with prioritized rules.
-
-**Important current limitation:** Gemini's documentation currently notes that workspace-tier policy rules are non-functional and recommends user/admin tiers instead.
-
-**ACP implication:** Gemini provides strong primitives, but even apparently suitable surfaces can have scope/version limitations. Integration capabilities need runtime/version validation, not marketing-level checkboxes.
-
-## 5.3 OpenCode
-
-Primary sources: [Permissions](https://opencode.ai/docs/permissions) and [Agents](https://opencode.ai/docs/agents).
-
-**FACT:** OpenCode exposes granular `allow / ask / deny` permissions, including command/path-level rules and per-agent overrides.
-
-**FACT:** It exposes primary agents and subagents with configurable tool access.
-
-**ACP implication:** OpenCode has deterministic permission surfaces and rich agent configuration. Its exact hook/plugin lifecycle and stability should be validated separately rather than assumed equivalent to Claude/Gemini.
-
-## 5.4 Codex
-
-Primary sources: [Running Codex safely at OpenAI](https://openai.com/index/running-codex-safely/) and [Harness engineering](https://openai.com/index/harness-engineering/).
-
-**FACT:** OpenAI documents sandboxing, approval policies, network controls, rules, managed configuration and agent-native telemetry/audit trails as mechanisms used to govern Codex execution.
-
-**FACT:** Project/repository instructions and environment design are central parts of the Codex harness model.
-
-**ACP implication:** Codex clearly exposes meaningful governance surfaces, but SPIKE-001 must establish whether it exposes a generic deterministic lifecycle hook surface equivalent to Claude/Gemini or whether ACP integration must rely on a different composition of rules, sandboxing, instructions, MCP/skills and telemetry.
-
-## 5.5 Cross-client implication
-
-**FACT:** An empirical 2026 study of agentic coding-tool configuration found distinct configuration cultures across tools, with context files dominating and advanced mechanisms such as skills/subagents still relatively shallowly adopted. It also identifies `AGENTS.md` as an emerging interoperable convention.
-
-Source: [Configuring Agentic AI Coding Tools: An Exploratory Study](https://arxiv.org/abs/2602.14690).
-
-**INFERENCE:** "Agent agnostic" cannot mean "one identical integration implementation". It should mean that the core semantics are independent of client internals while adapters translate those semantics to whatever supported capabilities each host actually has.
-
-This yields a likely capability negotiation problem:
+But those concerns belong closer to:
 
 ```text
-core requests semantic behavior
-        ↓
-adapter reports supported mechanism / guarantee
-        ↓
-behavior is enforced, guided, observed, or declared unsupported
+worker coordination / execution plane
 ```
 
-That is a hypothesis for SPIKE-001, not an accepted API design.
+than to AWCP's primary object:
+
+```text
+software work contract / governance / evidence
+```
+
+### Okto Nexus as an especially clear boundary example
+
+**FACT:** Okto Nexus describes itself as coordinating who does the work through shared context, ownership, handoffs and approvals, while Pulse structures what must be built.
+
+Source: [Okto Nexus](https://nexus.oktolabs.ai/).
+
+This provides a useful conceptual test:
+
+```text
+AWCP-like concern → what work exists, what it requires, what proves completion
+
+Nexus-like concern → which worker owns it, handoffs, coordination, worker communication
+```
+
+**HYPOTHESIS:** AWCP may need to expose information useful to orchestration systems without becoming one itself.
 
 ---
 
-# 6. Coding-agent runtimes: OpenHands and SWE-agent
+# 7. Coding-agent runtimes
 
-OpenHands and SWE-agent are relevant because they demonstrate how much reliability can live in a dedicated software-agent runtime/harness.
+Target clients/runtimes include:
 
-Primary sources: [OpenHands documentation](https://docs.openhands.dev/) and [SWE-agent documentation](https://swe-agent.com/latest/).
+- Claude Code;
+- Codex;
+- OpenCode;
+- Gemini CLI;
+- potentially OpenHands, SWE-agent and future tools where relevant.
 
-**FACT:** These projects provide their own execution/runtime abstractions around software-engineering agents, including controlled environments/tool interfaces and agent trajectories/workflows.
+They are not competitors to AWCP in the same sense as Pulse or Spec Kit. They own execution surfaces AWCP intends to preserve.
 
-**What ACP can learn:**
+The crucial research question is not whether they can code. It is:
 
-- environment isolation and tool-interface design matter;
-- execution trajectories are useful evidence;
-- verification and tool constraints can be built into the harness rather than left to prompting.
+> **What supported lifecycle, context, permission, policy, hook, plugin, skill, MCP, event and output surfaces do they expose for work control?**
 
-**Why they are not equivalent:** ACP explicitly does not want to create the agent runtime that executes the coding model. It wants existing clients to remain responsible for that loop.
+AWCP requires an explicit distinction between semantic portability and mechanism parity.
 
----
-
-# 7. General agent frameworks
-
-These frameworks are important chiefly to prevent an abstraction-layer mistake.
-
-## 7.1 LangGraph
-
-Primary source: [LangGraph persistence documentation](https://docs.langchain.com/oss/python/langgraph/persistence).
-
-**FACT:** LangGraph provides graph/workflow execution, persisted checkpoints, human-in-the-loop interruption, replay/time travel and fault-tolerant state for agents/workflows built on its runtime.
-
-**Layer mismatch:** It is a framework for **building the agent/workflow runtime**. ACP is investigating control around already-existing coding runtimes.
-
-## 7.2 AutoGen and Microsoft Agent Framework
-
-Primary sources: [microsoft/autogen](https://github.com/microsoft/autogen) and [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/).
-
-**Current correction:** AutoGen is now explicitly in **maintenance mode**. Microsoft directs new users to Microsoft Agent Framework, its production-oriented successor.
-
-**FACT:** Microsoft Agent Framework provides agents, tools, memory/persistence, workflows and hosting primitives.
-
-**Layer mismatch:** These primitives are for constructing and hosting agent applications. Adopting them as ACP's core would strongly pull the project toward owning its own runtime and agent loop.
-
-## 7.3 CrewAI
-
-Primary source: [CrewAI documentation](https://docs.crewai.com/).
-
-**FACT:** CrewAI provides agents/crews plus flows with persisted state, routing, guardrails, callbacks and human-in-the-loop mechanisms.
-
-**Layer mismatch:** Like LangGraph and Microsoft Agent Framework, CrewAI is designed to implement the agentic application/workflow itself.
-
-## General-framework conclusion
-
-**Already solved:** durable graph/workflow runtimes, multi-agent messaging, checkpointing, routing, human-in-the-loop and hosted execution all exist in mature generic frameworks.
-
-**ACP implication:** Unless later evidence changes the project boundary, these frameworks are references for mechanisms, not candidate foundations for ACP's core. Using one too early would likely turn ACP into the multi-agent runtime it explicitly does not want to become.
-
----
-
-# 8. Comparative synthesis
-
-The relevant landscape is easier to understand by **layer** than by product name.
-
-| Layer | Representative systems | What is largely solved | What ACP should not duplicate prematurely |
-|---|---|---|---|
-| Coding client/runtime | Claude Code, Codex, OpenCode, Gemini CLI | Agent loop, model interaction, tool execution, permissions/safety to varying degrees | Another coding agent or chat runtime |
-| Work substrate | Beads, Backlog.md, Task Master | Tasks, dependencies, readiness, persistent work records | A custom issue tracker before proving need |
-| Spec/process harness | Spec Kit, Spec Kitty, GSD, BMAD, Agent OS | Structured intent/specs/plans, context packaging, verification patterns | A giant new methodology/workflow catalog |
-| Session/orchestration | Maestro, Agent Deck, Gas City | Session supervision, multi-agent execution, parallelism, worktrees, fleet visibility | A session manager or distributed scheduler |
-| Generic agent framework | LangGraph, Microsoft Agent Framework, CrewAI | Agent/workflow construction, persistence, routing, HITL | Owning a general agent runtime |
-| Candidate ACP layer | not yet proven | Cross-client semantic work/governance composition | Must be validated rather than assumed |
-
-This table is a conceptual map, not a feature scorecard.
-
----
-
-# 9. What appears already solved or commoditized
-
-The following capabilities should carry a high burden of proof before ACP implements equivalents.
-
-## Already solved / commoditized
-
-### Structured specification and planning artifacts
-
-Spec Kit, Spec Kitty, GSD, BMAD and others already provide mature patterns for translating intent into specs, plans and tasks.
-
-### Persistent task/dependency substrates
-
-Beads and Backlog.md already provide durable work state with dependencies and machine-readable interfaces using very different persistence models.
-
-### Client-native agent loops and tool execution
-
-Claude Code, Codex, OpenCode and Gemini CLI already own the primary coding-agent interaction and execution loop.
-
-### Generic multi-agent orchestration runtimes
-
-LangGraph, Microsoft Agent Framework, CrewAI, Gas City and related systems already provide runtime orchestration primitives.
-
-### Session-management UIs
-
-Agent Deck and Maestro already demonstrate rich local supervision/management experiences for multiple coding agents.
-
-### Basic verification mechanics
-
-Tests, linters, CI, client hooks and methodology-specific verifier stages already exist. ACP does not need to invent verification execution; its interesting question is how verification requirements and evidence are associated with work.
-
----
-
-# 10. What is partially solved
-
-## Cross-client process portability
-
-Spec Kit and GSD demonstrate that workflows/instructions can be translated across many clients. But portability of a process is not the same as portability of **enforcement guarantees**.
-
-## Persistent work + methodology
-
-Spec Kitty, GSD and others connect persistent artifacts to execution. However, they generally own a stronger methodology than ACP currently wants.
-
-## Governance
-
-Claude/Gemini/OpenCode/Codex all expose meaningful native safety/governance mechanisms, and Spec Kitty/Spec Kit add process-level gates. What is not standardized is a client-neutral semantic contract that can say what is truly enforceable on each host.
-
-## Evidence and traceability
-
-Several systems preserve summaries, reviews, trajectories or mission state. Recent harness research emphasizes auditable episode evidence. The open question is whether ACP needs a small general `Evidence` concept linking work, gates and outcomes across clients.
-
-## Shared persistent context
-
-GSD, Beads, repository instruction files and client-specific memories all address continuity. The unresolved question is which state genuinely needs to be shared across clients rather than reconstructed from repository/project state.
-
----
-
-# 11. What remains uncertain
-
-These are research questions, not gaps we can claim as facts.
-
-## Can deterministic participation be portable?
-
-The project wants the control plane to participate when enabled rather than being an optional MCP tool the model may ignore. Claude and Gemini expose strong lifecycle hooks; other clients may require different mechanisms. We do not yet know whether a sufficiently transparent, supported, deterministic integration exists for every target client without introducing a wrapper that changes the normal user experience.
-
-## Does ACP need to own persistent work state?
-
-It may be enough to compose Spec Kit/GSD-style artifacts with Beads/Backlog.md and expose a thin normalization layer. A custom work model is not justified until SPIKE-002 disproves that composition.
-
-## Is a graph necessary?
-
-Dependencies are useful, but a graph database or graph-native schema is not implied. The useful invariant may be much smaller: "work can declare blockers and query readiness."
-
-## Is capability-driven orchestration a useful abstraction?
-
-The distinction `Capability ≠ Agent ≠ Model` is conceptually attractive, but it has not yet demonstrated operational value. SPIKE-003 must test whether it produces better, simpler behavior than host-native agents/workflows or direct execution.
-
-## Can governance remain thin?
-
-There is a risk that modeling constraints, policies, approvals, risk, quality gates and evidence turns ACP into a policy/workflow platform. The minimum semantics must be discovered from real use cases rather than designed top-down.
-
-## What state belongs in Git versus local/private storage?
-
-Repository-native state improves inspectability and portability, but execution state, locks, transient telemetry or sensitive local data may not belong in Git. This cannot be decided before concurrency and query requirements are known.
-
-## Does a resident process exist at all?
-
-The term "control plane" can bias design toward a daemon. There is currently no evidence that background state or scheduling is required. SPIKE-004 must determine whether an on-demand core is sufficient.
-
----
-
-# 12. Potential genuine gap
-
-**HYPOTHESIS, not market claim:** The research sampled so far has not identified a project that clearly combines all of the following while maintaining ACP's boundaries:
-
-1. developers keep their existing coding client as the primary interface;
-2. a small local, client-agnostic semantic layer persists project/work control state across sessions and clients;
-3. the layer does not own the model invocation or primary agent loop;
-4. it does not require a specific spec methodology, worktree strategy or fixed multi-agent pipeline;
-5. it can express work/governance/evidence needs independently of a particular agent role or model;
-6. client adapters translate those semantic needs into supported native surfaces;
-7. the system distinguishes deterministically enforced controls from guidance-only behavior;
-8. humans can inspect the same state agents use without a mandatory project-management UI.
-
-However, the apparent gap is **narrower than the original idea first suggested**.
-
-Spec Kit has moved significantly toward an extensible, agent-portable harness. Spec Kitty already combines repo-native mission state, governance, review and cross-agent integration. GSD provides persistent state, multi-runtime context engineering and verification. Beads/Backlog.md solve large parts of persistent work. Client-native hooks/policies solve substantial parts of enforcement.
-
-Therefore the likely opportunity, if it exists, is not to recreate those systems. It is to test whether a **minimal composition/control contract between them and heterogeneous coding clients** adds enough value to justify a distinct project.
-
-A useful falsification target is:
-
-> If Spec Kit or GSD + Beads/Backlog.md + native client enforcement surfaces can deliver the desired experience with thin configuration and no new semantic core, ACP should shrink dramatically or stop.
-
----
-
-# 13. Research implications for the first spikes
-
-## SPIKE-001 — Client integration surfaces should go first
-
-Why first: the core promise depends on being able to participate through existing clients without replacing them. If supported client surfaces cannot provide sufficient observation/injection/control, much of the architecture changes.
-
-The spike should empirically record, per client:
-
-- lifecycle events available;
-- context injection;
-- project/user/admin scope;
-- permission and blocking semantics;
-- MCP invocation guarantees;
-- skill/plugin mechanisms;
-- subagent control;
-- structured output/telemetry;
-- whether execution can be mandatory when ACP is enabled;
-- whether the integration depends on prompts;
-- Windows behavior;
-- version/stability status.
-
-Each capability should be marked something like:
+A future adapter might need to report guarantees conceptually similar to:
 
 ```text
 ENFORCEABLE
@@ -693,117 +477,303 @@ OBSERVABLE
 INJECTABLE
 GUIDANCE_ONLY
 UNSUPPORTED
-UNKNOWN
 ```
 
-This is a proposed research vocabulary, not an accepted schema.
+This vocabulary remains **OPEN**.
 
-## SPIKE-002 — Try to avoid owning Work
+### The mandatory-participation problem
 
-Test Beads, Backlog.md, simple repository files and a deliberately tiny custom representation against concrete queries:
+A major uncertainty is whether AWCP can participate automatically whenever enabled without replacing the normal coding-client launch/runtime boundary.
 
-- what is ready?
-- what blocks this?
-- what is the expected outcome?
-- who/what is working on it?
-- what evidence closes it?
-- can two clients update state safely?
-- can a human inspect/correct it?
-- can the agent query it cheaply?
+These mechanisms are not equivalent:
 
-Do not choose storage on aesthetics.
+```text
+MCP tool available to the model
+instruction telling the model to query work
+client lifecycle hook
+blocking policy / permission
+external wrapper
+```
 
-## SPIKE-003 — Falsify capability-driven orchestration
-
-Use a few representative work types with different risk/uncertainty characteristics and compare:
-
-- direct host-agent execution;
-- a fixed workflow;
-- capability-driven selection.
-
-The capability abstraction survives only if it reduces coupling or improves correctness/verification without recreating an orchestration framework.
-
-## SPIKE-004 — Let lifecycle requirements choose persistence
-
-Only after observing real integration and concurrent updates should the project test:
-
-- on-demand versus resident core;
-- locking/concurrency;
-- event requirements;
-- crash recovery;
-- transient versus durable state;
-- Git/private-state split.
+SPIKE-001 must measure actual behavior rather than infer guarantees from feature names.
 
 ---
 
-# 14. Current research conclusion
+# 8. General agent frameworks are a different abstraction layer
 
-The initial thesis should be narrowed from:
+Frameworks such as:
 
-> "We need a new methodology/control plane for agentic coding."
+- LangGraph;
+- AutoGen / successor Microsoft agent frameworks;
+- CrewAI;
+- OpenAI Agents SDK;
+- similar orchestration/runtime libraries;
 
-To:
+are useful when building an agent application or controlling its execution graph.
 
-> **"Modern agentic development is converging on persistent artifacts, structured work, harness-level context/governance and verification. Existing tools solve many of these concerns separately or inside opinionated runtimes. We need to test whether a small local, client-agnostic semantic control layer can compose those capabilities across existing coding clients without becoming another runtime, methodology or project manager."**
+AWCP currently intends to work **with already-existing coding agents** whose runtimes it does not own.
 
-That statement is consistent with the evidence while remaining falsifiable.
-
-The immediate research priority is therefore not feature design. It is to validate the two hardest boundaries:
-
-1. **cross-client supported integration and enforcement**, and
-2. **whether existing work substrates can remain the source of truth**.
-
-Everything beyond that should remain provisional until those questions produce evidence.
+Therefore these frameworks may contribute patterns for state machines, checkpointing, tool policies or observability, but they are not direct equivalents unless AWCP later decides to own an agent loop—which is currently outside its accepted boundary.
 
 ---
 
-# 15. Primary references
+# 9. Emerging category map
 
-## Research / concepts
+The research now suggests several distinct layers that should not be collapsed under "agentic tooling":
 
-- [From Prompt to Process: a Process Taxonomy and Comparative Assessment of Frameworks Supporting AI Software Development Agents](https://arxiv.org/abs/2606.04967)
-- [Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/)
-- [Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses](https://arxiv.org/abs/2604.25850)
-- [AI Harness Engineering: A Runtime Substrate for Foundation-Model Software Agents](https://arxiv.org/abs/2605.13357)
-- [Spec-Driven Development: From Code to Contract in the Age of AI Coding Assistants](https://arxiv.org/abs/2602.00180)
-- [Spec Kit Agents: Context-Grounded Agentic Workflows](https://arxiv.org/abs/2604.05278)
-- [Configuring Agentic AI Coding Tools: An Exploratory Study](https://arxiv.org/abs/2602.14690)
+```text
+┌──────────────────────────────────────────────┐
+│ SOFTWARE WORK / DELIVERY                    │
+│ intent · specs · tasks · constraints        │
+│ evidence · completion · project knowledge   │
+│                                              │
+│ Pulse / Spec systems / work substrates      │
+│ ← AWCP hypothesis lives primarily here      │
+└──────────────────────────────────────────────┘
+                      │
+                      ▼
+┌──────────────────────────────────────────────┐
+│ CODING-AGENT EXECUTION                      │
+│ Claude Code · Codex · OpenCode · Gemini CLI │
+│ agent loop · tools · context · edits        │
+└──────────────────────────────────────────────┘
+                      │
+           may coordinate workers through
+                      ▼
+┌──────────────────────────────────────────────┐
+│ AGENT / WORKER ORCHESTRATION                │
+│ sessions · ownership · handoffs · routing   │
+│ Nexus · Maestro · multi-agent systems       │
+└──────────────────────────────────────────────┘
+                      │
+           may be operated/governed by
+                      ▼
+┌──────────────────────────────────────────────┐
+│ AGENT CONTROL PLANE / ENTERPRISE OPS        │
+│ fleet · identity · lifecycle · security     │
+│ observability · cost · deployment           │
+│ IBM / Microsoft Foundry control planes      │
+└──────────────────────────────────────────────┘
+```
 
-## Work substrates
+The exact topology differs by product. The value of the diagram is categorical: **work, execution, worker coordination and fleet operations are separate concerns even when products combine them.**
 
-- [Beads](https://github.com/gastownhall/beads)
-- [Backlog.md](https://github.com/MrLesk/Backlog.md)
-- [Task Master AI](https://github.com/eyaltoledano/claude-task-master)
+---
 
-## Spec / methodology / harness systems
+# 10. What appears already solved or commoditized
 
-- [GitHub Spec Kit](https://github.github.io/spec-kit/)
-- [Spec Kitty](https://github.com/Priivacy-ai/spec-kitty)
-- [GSD / Get Shit Done](https://github.com/gsd-build/get-shit-done)
-- [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD)
-- [Agent OS](https://github.com/buildermethods/agent-os)
+The following no longer look like strong standalone reasons to build AWCP:
 
-## Orchestration / supervision
+### Structured specifications
 
-- [Maestro](https://github.com/RunMaestro/Maestro)
-- [Agent Deck](https://github.com/asheshgoplani/agent-deck)
-- [Gas City](https://github.com/gastownhall/gascity)
+Spec Kit, Spec Kitty, GSD, Pulse and others already provide mature patterns.
 
-## Coding clients
+### Persistent task/work records
 
-- [Claude Code hooks](https://code.claude.com/docs/en/hooks)
-- [Claude Code permissions](https://code.claude.com/docs/en/permissions)
-- [Gemini CLI hooks](https://geminicli.com/docs/hooks/)
-- [Gemini CLI policy engine](https://geminicli.com/docs/reference/policy-engine/)
-- [OpenCode permissions](https://opencode.ai/docs/permissions)
-- [OpenCode agents](https://opencode.ai/docs/agents)
-- [Running Codex safely at OpenAI](https://openai.com/index/running-codex-safely/)
+Beads, Backlog.md, Pulse and conventional issue systems already cover substantial ground.
 
-## General runtimes / frameworks
+### Dependency and ready-work calculation
 
-- [LangGraph](https://docs.langchain.com/oss/python/langgraph/)
-- [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/)
-- [AutoGen](https://github.com/microsoft/autogen)
-- [CrewAI](https://docs.crewai.com/)
-- [OpenHands](https://docs.openhands.dev/)
-- [SWE-agent](https://swe-agent.com/latest/)
+Existing work substrates already implement this.
+
+### Human-readable local project state
+
+Markdown-first and local-first systems demonstrate multiple viable approaches.
+
+### Agent access through MCP/CLI/instructions
+
+This is broadly available as an integration pattern.
+
+### Dashboards / boards / TUIs
+
+Visibility alone is not a product gap.
+
+### Named specialized agents
+
+Many frameworks already implement role/persona-driven pipelines. Recreating them is not differentiation.
+
+### Generic agent fleet governance
+
+IBM, Microsoft and other platforms are explicitly building this category. It is outside AWCP's primary scope anyway.
+
+---
+
+# 11. What appears partially solved
+
+## 11.1 Cross-client work continuity
+
+Many systems support multiple coding agents, but portability often means "we generate/install the right instructions for each client" rather than a proven semantic guarantee that one client can continue another's work state safely.
+
+## 11.2 Work governance
+
+Specs, acceptance criteria, review states and quality gates are common. The unresolved question is how much of that can be made technically enforceable across heterogeneous coding clients without owning the runtime.
+
+## 11.3 Evidence-driven completion
+
+Several systems have tests, validation and review concepts. A portable semantic model that connects arbitrary work requirements to evidence and completion may still be less standardized.
+
+## 11.4 Adaptive structure
+
+Risk/complexity-adaptive workflows exist, but many systems still encode process primarily through named stages or agent roles.
+
+The AWCP hypothesis of:
+
+```text
+work characteristics
+    ↓
+required capabilities / gates
+    ↓
+client-specific realization
+```
+
+remains unvalidated.
+
+## 11.5 Human-readable and machine-native state
+
+Existing systems show this is feasible. The unresolved question is not feasibility but the **minimal semantic core** required for interoperability and governance.
+
+---
+
+# 12. What remains genuinely uncertain
+
+These are the questions that currently justify research.
+
+## 12.1 Is there a reusable work-control abstraction independent of methodology?
+
+Could the same semantic work object survive across:
+
+- Spec Kit;
+- Beads;
+- Backlog.md;
+- Pulse;
+- a simple repository;
+- different coding clients;
+
+without becoming the lowest-common-denominator abstraction that helps nobody?
+
+## 12.2 Can critical work control be portable without runtime ownership?
+
+The product vision requires coding clients to remain primary. That makes heterogeneous integration guarantees the central architectural risk.
+
+## 12.3 Does AWCP need to own work state?
+
+It may be enough to own only:
+
+```text
+control metadata
+constraints
+cross-system references
+evidence links
+completion state
+```
+
+while specs/tasks remain authoritative elsewhere.
+
+Or even that may be unnecessary.
+
+## 12.4 Is capability-driven reasoning useful?
+
+The distinction:
+
+```text
+WORK CAPABILITY ≠ AGENT ROLE ≠ MODEL
+```
+
+is conceptually attractive but unproven. A spike must show that it leads to better, simpler or more portable work control than fixed workflows.
+
+## 12.5 What does "done" mean across work types?
+
+Implementation, research, debugging, migration, documentation and architecture work may require very different evidence. A universal completion model may be a mistake.
+
+---
+
+# 13. Potential genuine gap
+
+The strongest remaining hypothesis is narrower than the project's original formulation.
+
+It is **not**:
+
+> Build a control plane for coding agents.
+
+It is closer to:
+
+> **Provide a small, local and agent-agnostic semantic control layer for software work, so heterogeneous coding agents can participate in the same persistent work state, constraints and evidence model without requiring the control layer to own their execution runtime.**
+
+Possible differentiation, if validated, would come from the combination of:
+
+1. **work-first semantics** rather than agent-first semantics;
+2. **methodology independence** rather than one mandatory SDLC pipeline;
+3. **executor independence** — agent, human or deterministic tool;
+4. **portable governance semantics** with explicit differences between guidance, verification and enforcement;
+5. **evidence-backed completion**;
+6. **minimal ownership/composability** with existing work/spec systems;
+7. **cross-client continuity** without replacing the coding client.
+
+None of these points is yet sufficient evidence that a new implementation should exist.
+
+---
+
+# 14. Falsification criteria
+
+AWCP should not be built as a separate system if experiments show that a small composition of existing tools provides the desired experience.
+
+Examples that could falsify or radically shrink the project:
+
+```text
+Spec Kit + Beads + native client hooks/policies
+
+Backlog.md + supported client integration + CI evidence
+
+Okto Pulse configured/extended to avoid unwanted methodology coupling
+
+coding-client-native project memory + Git/CI with minimal glue
+```
+
+A useful research program should therefore ask:
+
+> **What is the smallest composition that already gives us persistent, governed and verifiable software work across coding agents?**
+
+Only the remaining irreducible gap should become owned AWCP architecture.
+
+---
+
+# 15. Research conclusion
+
+## Already solved / commoditized
+
+- structured specs and plans;
+- durable tasks and dependencies;
+- ready/blocked work in existing substrates;
+- Markdown/local-first project state;
+- MCP/CLI agent access;
+- many review and verification patterns;
+- coding-client portability at the installation/instruction level;
+- dashboards and work visualization;
+- agent fleet governance as a separate enterprise category.
+
+## Partially solved
+
+- cross-client continuity;
+- persistent work governance;
+- evidence-linked completion;
+- adaptive process by risk/type;
+- multi-client integration around one work model;
+- human/agent sharing of structured work artifacts.
+
+## Still uncertain
+
+- minimal AWCP semantic model;
+- whether AWCP must own any work substrate;
+- portable enforcement guarantees;
+- mandatory participation while preserving native coding clients;
+- capability-driven work control;
+- evidence/completion semantics across work types;
+- persistence and concurrency requirements.
+
+## Potential genuine gap
+
+A **thin work-control layer** between durable software-work semantics and heterogeneous coding-agent execution may remain underserved.
+
+But Okto Pulse, Spec Kit and existing work substrates make the bar substantially higher than the original hypothesis suggested.
+
+The next phase must therefore optimize for **falsification and composition**, not feature design.
