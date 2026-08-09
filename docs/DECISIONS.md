@@ -2,11 +2,9 @@
 
 ## Status
 
-This log intentionally begins with **very few accepted decisions**.
+This log intentionally contains only a small set of accepted conceptual boundaries.
 
-Only `AWCP-DEC-001` through `AWCP-DEC-006` are accepted. Everything listed under **Open questions and undecided choices** remains `OPEN`, even when other documents discuss it as a hypothesis or candidate.
-
-The prefix changed from `ACP` to `AWCP` because the project boundary has been clarified from a generic/agent control plane to an **Agentic Work Control Plane**.
+`AWCP-DEC-001` through `AWCP-DEC-007` are currently accepted. Everything listed under **Open questions and undecided choices** remains `OPEN`.
 
 Decision status vocabulary:
 
@@ -21,15 +19,15 @@ Decision status vocabulary:
 
 ### Decision
 
-Agentic Work Control Plane is concerned primarily with the **software work performed with coding agents**: its intent, structure, constraints, decisions, capability requirements, evidence and completion state.
+Agentic Work Control Plane is concerned primarily with the **software work performed with coding agents**: intent, structure, constraints, decisions, required responsibilities, evidence and completion state.
 
-It is not an Agent Control Plane for deploying, registering, operating, monitoring or governing a fleet of AI agents as infrastructure.
+It is not an Agent Control Plane for deploying, registering, operating or monitoring a fleet of AI agents as infrastructure.
 
 ### Consequence
 
-Agent lifecycle, fleet inventory, deployment, model hosting, distributed scheduling, agent health and enterprise agent operations are outside the primary product boundary.
+Agent lifecycle, deployment, hosting, fleet health and distributed agent operations are outside the primary product boundary.
 
-Agents, humans, CI and deterministic tools may be executors or contributors to work without becoming the core semantic object of the system.
+Agent roles may be first-class elements of the work model without making the agent fleet itself the governed object.
 
 ---
 
@@ -39,13 +37,13 @@ Agents, humans, CI and deterministic tools may be executors or contributors to w
 
 ### Decision
 
-Developers continue working through coding clients such as Claude Code, Codex, OpenCode and Gemini CLI. Those clients retain ownership of their normal conversational interface, agent loop and native tool execution.
-
-Any future TUI or other Work Control Plane UI is secondary: it observes or lightly edits shared work state rather than replacing the coding client.
+Developers continue working through coding clients such as Claude Code, Codex, OpenCode and Gemini CLI. Those clients retain ownership of their normal conversational interface, native agent loop and tool execution.
 
 ### Consequence
 
-The project must integrate with coding clients rather than recreate them. It must not require a separate primary interface merely to use the work model.
+AWCP must integrate with already-built coding agents rather than require users to rebuild their daily development workflow on a custom agent SDK/runtime.
+
+A future TUI or Work Control Plane UI is secondary: it observes or lightly edits shared work state rather than replacing the coding client.
 
 ---
 
@@ -63,21 +61,27 @@ A hosted service must not be required for the fundamental experience. This does 
 
 ---
 
-## AWCP-DEC-004 — Work semantics are agent- and client-agnostic
+## AWCP-DEC-004 — Work, role, capability, executor and model are distinct abstractions
 
 **Status:** ACCEPTED
 
 ### Decision
 
-Shared work concepts should describe semantic requirements of the software work rather than the private vocabulary or implementation model of a particular coding client, named agent or model.
+AWCP must preserve the distinction:
 
-Client-specific behavior belongs behind integration boundaries.
+```text
+Work Type
+≠ Agent Role
+≠ Capability
+≠ Executor Instance
+≠ Model
+```
+
+A role such as `Developer`, `Tester`, `Code Reviewer` or `Architect` represents a semantic responsibility required by the work. It must not be collapsed into a generic capability or permanently bound to a particular client, model, prompt or agent process.
 
 ### Consequence
 
-A concept such as `verification required`, `constraint`, `evidence` or `capability` must not automatically imply a specific Claude subagent, Codex mechanism, model, prompt or tool.
-
-This does not guarantee feature parity across clients. The same semantic request may have different implementation guarantees on different hosts.
+Client adapters may realize the same role differently. A role definition may imply required capabilities, context, permissions, inputs, outputs, evidence and independence constraints without fixing the runtime implementation.
 
 ---
 
@@ -87,121 +91,190 @@ This does not guarantee feature parity across clients. The same semantic request
 
 ### Decision
 
-Where the host client or surrounding development environment exposes technical enforcement surfaces, critical work constraints should use them rather than relying exclusively on natural-language instructions.
+Where the host client or surrounding development environment exposes technical enforcement surfaces, critical work constraints and role restrictions should use them rather than relying exclusively on natural-language instructions.
 
 ### Consequence
 
-The project must distinguish explicitly between **guidance**, **verification** and **enforcement**.
+The project must distinguish explicitly between:
 
-If a host can only receive an instruction but cannot technically block or guarantee the relevant behavior, the Work Control Plane must not describe that integration as deterministic enforcement.
+```text
+guidance
+verification
+enforcement
+```
+
+If a host can only receive an instruction but cannot technically constrain the relevant behavior, AWCP must not describe that integration as deterministic enforcement.
 
 ---
 
-## AWCP-DEC-006 — Reuse upstream capabilities before implementing equivalents
+## AWCP-DEC-006 — Reuse upstream infrastructure before implementing equivalents
 
 **Status:** ACCEPTED
 
 ### Decision
 
-Before creating a subsystem or owning new state, determine whether an existing coding-client capability or external project already solves the problem sufficiently.
+Before creating a subsystem or owning new state, determine whether an existing coding-client capability, local system or external project already solves the problem sufficiently.
+
+This applies explicitly to:
+
+- work/spec substrates;
+- context management;
+- project memory;
+- permissions and policy;
+- sandboxing;
+- observability and telemetry;
+- verification tooling;
+- agent-control infrastructure;
+- client-native subagent/agent mechanisms.
 
 ### Consequence
 
-The burden of proof is on new Work Control Plane abstractions. Existing work substrates, spec systems, Git, CI, client permissions/hooks, verification tools and other supported primitives should be evaluated before equivalent functionality is built.
+AWCP may express semantic requirements for context, permissions, memory, verification or observability without implementing those systems itself.
 
-The Work Control Plane does not need to own a concern merely because it needs to reason about or observe it.
+The burden of proof is on new AWCP infrastructure. **Integrate, do not reimplement by default.**
+
+---
+
+## AWCP-DEC-007 — Work derives required agent-role composition
+
+**Status:** ACCEPTED
+
+### Decision
+
+The methodology must be able to derive **required agent roles** from the type, risk, complexity and needs of a unit of work.
+
+There is no single mandatory global agent pipeline. However, a given class of work may require a specific composition of responsibilities before it is eligible for completion.
+
+Illustrative examples:
+
+```text
+implementation
+→ Developer + Tester + Code Reviewer
+
+architecture / organization
+→ Architect + Senior Engineer
+```
+
+These examples do not define the final role taxonomy or policy table.
+
+### Consequence
+
+AWCP must be able to represent:
+
+- required roles per work item or work level;
+- role-specific responsibilities;
+- required capabilities;
+- context and permission requirements;
+- expected evidence;
+- ordering/dependency where necessary;
+- separation-of-responsibility / independence constraints where necessary;
+- completion conditions tied to satisfaction of required roles.
+
+A role may be materialized through client-native agents/subagents or other supported mechanisms; AWCP does not thereby become a custom multi-agent runtime.
 
 ---
 
 # Open questions and undecided choices
 
-Everything below is **OPEN**.
+Everything below remains **OPEN**.
 
-## Product and semantic model
+## Work and methodology model
 
 - `OPEN` — exact product scope;
 - `OPEN` — whether a distinct Work Control Plane is necessary after composition experiments;
-- `OPEN` — the minimum useful work model;
-- `OPEN` — whether `Intent` is a first-class concept;
+- `OPEN` — exact work hierarchy (`Intent`, `WorkPackage`, `Task`, or another model);
+- `OPEN` — minimum useful work representation;
 - `OPEN` — specification/work-contract representation;
-- `OPEN` — work substrate;
+- `OPEN` — dependency graph requirements;
+- `OPEN` — work granularity;
+- `OPEN` — work classification mechanism;
+- `OPEN` — risk/complexity representation;
+- `OPEN` — completion semantics across work types;
+- `OPEN` — evidence model.
+
+## Agent roles and methodology policy
+
+- `OPEN` — final role vocabulary;
+- `OPEN` — whether roles are global, project-configurable or both;
+- `OPEN` — default role compositions per work class;
+- `OPEN` — how role composition adapts to risk and complexity;
+- `OPEN` — which roles require executor independence;
+- `OPEN` — whether one executor may satisfy multiple compatible roles;
+- `OPEN` — role inputs/outputs/contracts;
+- `OPEN` — role-specific evidence requirements;
+- `OPEN` — role ordering versus parallelism;
+- `OPEN` — escalation when a client cannot realize a required role;
+- `OPEN` — human roles/approvals versus agent roles.
+
+## Capabilities and executor resolution
+
+- `OPEN` — capability vocabulary;
+- `OPEN` — whether capabilities need persistent representation;
+- `OPEN` — mapping from roles to capabilities;
+- `OPEN` — executor-resolution mechanism;
+- `OPEN` — whether executor binding is advisory or operational per client;
+- `OPEN` — retry/repair semantics;
+- `OPEN` — use of deterministic tools as part of a role's evidence path.
+
+## Context and memory
+
+- `OPEN` — context-requirement representation;
+- `OPEN` — project-memory provider(s);
+- `OPEN` — whether AWCP must own any memory state;
+- `OPEN` — integration with client-native memory/context;
+- `OPEN` — integration with local external context-management systems;
+- `OPEN` — context provenance and scoping;
+- `OPEN` — role-specific context isolation.
+
+## Permissions, policy and sandboxing
+
+- `OPEN` — permission-requirement representation;
+- `OPEN` — portable role permission semantics;
+- `OPEN` — client-native permission/hook/policy mechanisms;
+- `OPEN` — use of external local Agent Control Planes or policy systems;
+- `OPEN` — sandbox integration;
+- `OPEN` — whether separate role contexts are required to enforce independence;
+- `OPEN` — enforcement guarantee matrix.
+
+## Work substrate and persistence
+
 - `OPEN` — Beads;
 - `OPEN` — Backlog.md;
 - `OPEN` — Spec Kit as a process/harness substrate;
 - `OPEN` — Okto Pulse as a sufficiently close existing solution;
 - `OPEN` — custom work model;
-- `OPEN` — whether a dependency graph is required;
-- `OPEN` — work granularity;
 - `OPEN` — source-of-truth semantics;
-- `OPEN` — decision representation beyond bootstrap documentation;
-- `OPEN` — evidence model;
-- `OPEN` — completion semantics;
-- `OPEN` — risk model;
-- `OPEN` — capability model;
-- `OPEN` — capability vocabulary;
-- `OPEN` — executor-resolution semantics;
-- `OPEN` — repair/retry semantics;
-- `OPEN` — human-approval model.
-
-## Ownership and persistence
-
-- `OPEN` — which state the Work Control Plane must own;
-- `OPEN` — which state can remain authoritative upstream;
-- `OPEN` — unified source of truth versus derived projection;
-- `OPEN` — simple repository files;
-- `OPEN` — Git as persistence or partial persistence;
-- `OPEN` — private versus versioned state;
-- `OPEN` — SQLite;
-- `OPEN` — any other database;
-- `OPEN` — daemon;
-- `OPEN` — on-demand process;
-- `OPEN` — process lifecycle;
-- `OPEN` — concurrency model;
-- `OPEN` — locking;
-- `OPEN` — event stream;
-- `OPEN` — crash recovery;
-- `OPEN` — stale work/execution detection.
+- `OPEN` — which state AWCP must own versus reference;
+- `OPEN` — repository files;
+- `OPEN` — Git persistence;
+- `OPEN` — SQLite or any other database;
+- `OPEN` — daemon versus on-demand process;
+- `OPEN` — concurrency, locking and crash recovery.
 
 ## Coding-client integration
 
-- `OPEN` — integration mechanism per client;
+- `OPEN` — mechanism per client;
 - `OPEN` — common semantic adapter contract;
+- `OPEN` — role materialization mechanism per client;
 - `OPEN` — MCP;
 - `OPEN` — hooks;
 - `OPEN` — plugins;
 - `OPEN` — skills;
-- `OPEN` — instruction files;
+- `OPEN` — instructions;
+- `OPEN` — native subagents/agents;
 - `OPEN` — wrappers;
-- `OPEN` — CLI protocol;
-- `OPEN` — API;
-- `OPEN` — events;
-- `OPEN` — context injection mechanism;
-- `OPEN` — evidence collection mechanism;
-- `OPEN` — enforcement capability matrix;
-- `OPEN` — whether enabled participation can be made deterministic on every target client;
-- `OPEN` — adapter capability vocabulary such as `ENFORCEABLE`, `OBSERVABLE`, `INJECTABLE`, `GUIDANCE_ONLY`, `UNSUPPORTED`.
+- `OPEN` — CLI/API/events;
+- `OPEN` — mandatory participation guarantees;
+- `OPEN` — guarantee vocabulary such as `ENFORCEABLE`, `OBSERVABLE`, `INJECTABLE`, `GUIDANCE_ONLY`, `UNSUPPORTED`.
 
-## Execution boundary
+## Observability
 
-- `OPEN` — whether the Work Control Plane ever invokes a model directly for narrow support functions;
-- `OPEN` — whether model-assisted classification is useful or necessary;
-- `OPEN` — how required capabilities resolve to available executors;
-- `OPEN` — whether executor resolution is advisory or operational;
-- `OPEN` — retry policy;
-- `OPEN` — scheduling semantics, if any;
-- `OPEN` — parallel-work semantics;
-- `OPEN` — interaction with worktrees;
-- `OPEN` — where work control ends and agent/session orchestration begins.
-
-## Observation
-
+- `OPEN` — reuse of client-native telemetry;
+- `OPEN` — reuse of external local observability systems;
 - `OPEN` — event model;
-- `OPEN` — authoritative versus derived observable state;
 - `OPEN` — TUI technology;
-- `OPEN` — CLI/JSON observation surfaces;
-- `OPEN` — allowed human edits;
-- `OPEN` — observability stack;
-- `OPEN` — cost/telemetry integration.
+- `OPEN` — cost/telemetry integration;
+- `OPEN` — role-level execution visibility.
 
 ## Implementation technology
 
