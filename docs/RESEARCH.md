@@ -6,9 +6,11 @@ This document asks:
 
 > **What parts of agentic software work are already solved, what can be composed, and what remains unsolved enough to justify an Agentic Work Control Plane?**
 
+The current hypothesis is specifically about **daily software development with existing coding agents** such as Claude Code, Codex, OpenCode and Gemini CLI. It is not primarily about building custom agents on a new SDK/runtime.
+
 It is not a catalog of AI-development tools and it does not assume that a new product needs to exist.
 
-Research snapshot refreshed on **2026-08-09** using official documentation, official repositories and recent papers where possible. External systems are moving quickly; claims about current products must be revalidated during the relevant spike before becoming architecture.
+Research snapshot refreshed on **2026-08-09** using official documentation, official repositories and recent papers where possible. External systems move quickly; claims about current products must be revalidated during the relevant spike before becoming architecture.
 
 ### Evidence labels
 
@@ -25,14 +27,14 @@ The initial project name, `agentic-control-plane`, was too broad and increasingl
 
 ## 1.1 What current Agent Control Planes control
 
-**FACT:** IBM defines an agent control plane as the system that deploys, operates, monitors and governs AI agents across an organization. Individual agents operate in a data plane where they execute tasks and interact with tools, while the control plane handles system-level governance and coordination.
+**FACT:** IBM defines an agent control plane as a system that deploys, operates, monitors and governs AI agents across an organization. Individual agents operate in a data plane where they execute tasks and interact with tools, while the control plane handles system-level governance and coordination.
 
 Sources:
 
 - [IBM — What is an Agent Control Plane?](https://www.ibm.com/think/topics/agent-control-plane)
 - [IBM watsonx Orchestrate — Agent Control Plane](https://www.ibm.com/products/watsonx-orchestrate/agent-control-plane)
 
-**FACT:** Microsoft Foundry Control Plane similarly centralizes management of AI agents, models and tools across an enterprise. Its documented concerns include agent inventory, fleet management, observability, compliance, security and lifecycle operations.
+**FACT:** Microsoft Foundry Control Plane similarly centralizes management of AI agents, models and tools across an enterprise, including agent inventory, fleet management, observability, compliance, security and lifecycle operations.
 
 Sources:
 
@@ -54,13 +56,11 @@ fleet operations
 policy
 ```
 
-That is not the primary object investigated by this project.
+That is not the primary object investigated by AWCP.
 
 ## 1.2 The object here is software work
 
-The project instead asks whether software work performed through heterogeneous coding agents needs durable structure and governance independent of any single coding client.
-
-A useful category distinction is:
+AWCP instead asks whether software work performed through heterogeneous coding agents needs durable structure, explicit responsibility and governance independent of any single coding client.
 
 ```text
 Agent Control Plane
@@ -70,25 +70,26 @@ Agentic Work Control Plane
     governs → software work performed with agents
 ```
 
-Candidate work concerns are:
+Candidate work concerns include:
 
 ```text
 intent
-specification / work contract
-work units
+work packages / tasks
 dependencies
+required agent roles
 constraints
 decisions
-capability requirements
+context requirements
+permission requirements
 evidence
 verification
 completion
 continuity
 ```
 
-**DECISION:** The project is therefore reframed as **Agentic Work Control Plane (AWCP)**.
+**DECISION:** The project is framed as **Agentic Work Control Plane (AWCP)**.
 
-This naming distinction does not prove that the category is novel. It only identifies the object of control more accurately.
+This naming distinction does not prove novelty. It identifies the governed object more accurately.
 
 ---
 
@@ -100,7 +101,7 @@ This naming distinction does not prove that the category is novel. It only ident
 
 Source: [From Prompt to Process: a Process Taxonomy and Comparative Assessment of Frameworks Supporting AI Software Development Agents](https://arxiv.org/abs/2606.04967).
 
-**INFERENCE:** The useful emerging pattern is not a new ceremony framework but an increasingly explicit delivery chain:
+**INFERENCE:** The emerging pattern is not a replacement ceremony framework but an increasingly explicit delivery chain:
 
 ```text
 Intent
@@ -108,6 +109,8 @@ Intent
 Specification / work contract
   ↓
 Persistent work structure
+  ↓
+Responsibility assignment
   ↓
 Execution
   ↓
@@ -120,7 +123,7 @@ Outcome / merge
 Persistent project knowledge
 ```
 
-This is evidence of convergence, not an AWCP workflow design.
+The important correction for AWCP is that **responsibility assignment cannot be reduced to generic capabilities**. A methodology may require a developer, tester and independent reviewer to participate distinctly even when their underlying tools overlap.
 
 ## 2.2 Harness engineering moves reliability outside the model
 
@@ -135,11 +138,9 @@ Sources:
 - [Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses](https://arxiv.org/abs/2604.25850)
 - [AI Harness Engineering: A Runtime Substrate for Foundation-Model Software Agents](https://arxiv.org/abs/2605.13357)
 
-**INFERENCE:** Reliability increasingly belongs to the system formed by **model + harness + development environment**, not to the prompt alone.
+**INFERENCE:** Reliability increasingly belongs to **model + harness + development environment**, not to the prompt alone.
 
-However, these harnesses often assume ownership of or proximity to the agent runtime. AWCP asks a narrower question:
-
-> Can project-level work structure and governance be made persistent and portable **without owning the coding agent's loop?**
+This is directly relevant to AWCP because role-driven execution needs context, memory, permissions, verification and observability. However, needing those functions does not imply AWCP should implement them.
 
 ## 2.3 Spec-driven development is becoming infrastructure rather than documentation
 
@@ -150,91 +151,142 @@ Sources:
 - [Spec-Driven Development: From Code to Contract in the Age of AI Coding Assistants](https://arxiv.org/abs/2602.00180)
 - [Spec Kit Agents: Context-Grounded Agentic Workflows](https://arxiv.org/abs/2604.05278)
 
-**INFERENCE:** AWCP should not equate persistent work with "a better PRD". The important pattern is the relationship between intent, executable work, constraints, outcomes and evidence.
+**INFERENCE:** AWCP should not equate persistent work with "a better PRD". The important pattern is the relationship between intent, decomposed work, responsibility, context, constraints, outcomes and evidence.
 
 ---
 
-# 3. The closest direct comparable: Okto Pulse
+# 3. Core correction: work requires organizational structure, not only capabilities
 
-The reframing around **work rather than workers** makes OktoLabs especially important.
+The earlier AWCP hypothesis over-corrected away from role-centric multi-agent systems by treating capabilities as the main execution abstraction.
 
-## 3.1 Pulse organizes work; Nexus organizes workers
+That loses an important property of software methodology: **different responsibilities may need to be represented and satisfied separately**.
+
+## 3.1 Role-driven work
+
+**DECISION:** Work type, risk, complexity and needs may derive a required composition of agent roles.
+
+Illustratively:
+
+```text
+Implementation Task
+├── Developer
+├── Tester
+└── Code Reviewer
+```
+
+```text
+Architecture / Organization Task
+├── Architect
+└── Senior Engineer
+```
+
+A security-sensitive implementation may add a Security Reviewer. A trivial change may require only a Developer.
+
+The research question is therefore not whether named roles should exist at all. It is:
+
+> **Which role distinctions encode real independent responsibility, and which are merely persona theatre?**
+
+## 3.2 Role is not model policy
+
+The corrected distinction is:
+
+```text
+Work Type
+≠ Agent Role
+≠ Capability
+≠ Executor Instance
+≠ Model
+```
+
+A `Code Reviewer` is a semantic responsibility. It may require capabilities such as inspection, reasoning and verification, but it should not automatically mean a fixed model, prompt or permanent agent process.
+
+Likewise, a `Tester` role is not equivalent to "run tests" if the methodology requires independent validation of requirements and behavior.
+
+## 3.3 Independence matters
+
+**HYPOTHESIS:** Some work classes require separation of responsibility.
+
+For example:
+
+```text
+Developer implements
+        ↓
+Tester validates independently
+        ↓
+Code Reviewer challenges implementation independently
+        ↓
+completion becomes eligible
+```
+
+This can create stronger evidence than one executor implementing and self-approving everything.
+
+The key research challenge is whether this structure can be materialized through existing coding clients without AWCP becoming a custom multi-agent runtime.
+
+---
+
+# 4. The closest direct comparable: Okto Pulse / Nexus
+
+The work-versus-workers distinction makes OktoLabs especially relevant.
+
+## 4.1 Pulse organizes work; Nexus organizes workers
 
 **FACT:** OktoLabs explicitly separates two layers:
 
-- **Pulse** organizes the work through specifications, tasks, acceptance criteria, validation and project knowledge.
-- **Nexus** organizes the workers through ownership, handoffs, approvals, shared context and durable coordination history.
+- **Pulse** organizes work through specifications, tasks, acceptance criteria, validation and project knowledge.
+- **Nexus** organizes workers through ownership, handoffs, approvals, shared context and durable coordination history.
 
-Source: [Okto Pulse](https://pulse.oktolabs.ai/).
+Sources:
 
-Their published formulation is effectively:
+- [Okto Pulse](https://pulse.oktolabs.ai/)
+- [Okto Nexus](https://nexus.oktolabs.ai/)
+
+Their published separation can be summarized as:
 
 ```text
 Pulse → work
 Nexus → workers
 ```
 
-This independently mirrors the distinction AWCP is now making between a **Work Control Plane** and an **Agent Control Plane / agent coordination layer**.
+This is useful evidence that **work structure** and **worker/agent coordination** are separable concerns.
 
-## 3.2 Pulse capabilities
+## 4.2 What this means for AWCP
 
-**FACT:** OktoLabs describes Pulse as a local-first, spec-driven project board/workbench for AI-assisted software work with native MCP support.
-
-Sources:
-
-- [OktoLabs — About](https://oktolabs.ai/about/)
-- [Okto Pulse](https://pulse.oktolabs.ai/)
-- [okto-pulse on PyPI](https://pypi.org/project/okto-pulse/)
-
-Documented characteristics include:
+Pulse already demonstrates much of the proposition that agent-assisted software work benefits from:
 
 - local-first state;
-- structured ideation, refinement, specifications, tasks, tests and bugs;
-- acceptance criteria and validation gates;
-- traceability between artifacts;
+- specifications and tasks;
+- acceptance criteria;
+- validation gates;
+- traceability;
 - persistent project knowledge;
-- MCP-native agent access;
-- a human-visible board;
-- explicit evidence/validation concepts.
+- MCP access;
+- a human-visible board.
 
-**INFERENCE:** Pulse is currently one of the closest implementations to the *experience* AWCP is investigating.
+Therefore AWCP cannot justify itself by persistent tasks, specs, evidence or UI alone.
 
-This changes the burden of proof. AWCP cannot justify itself merely by saying:
+The newer AWCP hypothesis adds questions such as:
 
-> "Agents need persistent tasks, specifications, governance, evidence and a local UI."
+- can work classes derive required agent-role composition?
+- can role independence be expressed and verified?
+- can the same work/role semantics map to Claude Code, Codex, OpenCode and Gemini CLI?
+- can context and permissions be scoped per role using existing systems?
+- can these guarantees exist without adopting a complete custom-agent runtime or mandatory worker-coordination platform?
 
-Pulse already demonstrates a coherent implementation of much of that proposition.
-
-## 3.3 What still needs comparison
-
-Pulse is intentionally opinionated and spec-driven. Its published workflow includes explicit stages such as ideation, refinement, specification, sprint, tasks and validation.
-
-AWCP currently hypothesizes a potentially thinner layer in which:
-
-- the work substrate may be external;
-- no single methodology is mandatory;
-- capabilities may be derived from work rather than fixed workflow stages;
-- the existing coding client remains the primary interaction surface;
-- critical integration may need stronger lifecycle participation than voluntary MCP tool usage;
-- work semantics should remain portable even if different clients provide different guarantees.
-
-**HYPOTHESIS:** A meaningful AWCP gap exists only if experiments show that these differences matter enough to justify a distinct layer rather than configuring or extending Pulse.
-
-SPIKE-002 must therefore treat Pulse as a **falsification candidate**, not merely inspiration.
+**HYPOTHESIS:** Pulse/Nexus together may already solve a large part of the desired experience. They remain falsification candidates, not merely inspiration.
 
 ---
 
-# 4. Work substrates
+# 5. Work substrates
 
-These systems matter because AWCP may need durable work, dependency, readiness and history semantics. The first question is not which substrate to adopt; it is whether AWCP should own one at all.
+These systems matter because AWCP may need durable work, dependency, readiness and history semantics. The first question is whether AWCP should own any such substrate.
 
-## 4.1 Beads / `bd`
+## 5.1 Beads / `bd`
 
 Primary source: [gastownhall/beads](https://github.com/gastownhall/beads).
 
 **FACT:** Beads provides structured persistent work/issue state for coding agents, including dependency relationships and ready-work queries.
 
-Relevant reusable patterns include:
+Reusable patterns include:
 
 - dependency-aware work graphs;
 - ready/blocked calculation;
@@ -242,60 +294,43 @@ Relevant reusable patterns include:
 - concurrency and claiming patterns;
 - coding-agent bootstrap/integration patterns.
 
-**INFERENCE:** Beads may already solve a substantial portion of AWCP's candidate `Work` responsibility.
+**INFERENCE:** Beads may already solve a substantial portion of AWCP's `Work` responsibility.
 
-What it does not automatically answer is whether AWCP needs:
+Remaining AWCP-specific questions include role requirements, role evidence, client-specific role realization and governance guarantees.
 
-- work governance beyond issue state;
-- evidence semantics;
-- client-neutral enforcement guarantees;
-- a capability requirement layer;
-- explicit cross-client continuation semantics.
-
-**Research consequence:** test Beads directly before inventing a work graph.
-
-## 4.2 Backlog.md
+## 5.2 Backlog.md
 
 Primary source: [MrLesk/Backlog.md](https://github.com/MrLesk/Backlog.md).
 
 **FACT:** Backlog.md stores human-readable project-local work in Markdown and supports tasks, acceptance criteria, Definition of Done, milestones, dependencies, plans, comments and decisions, with CLI/MCP access for coding agents.
 
-Relevant reusable patterns:
+Reusable patterns include:
 
-- machine-readable state that remains directly human-readable;
-- acceptance criteria as explicit work contract;
+- machine-readable state that remains human-readable;
+- acceptance criteria as explicit work contracts;
 - local-first persistence;
 - stable CLI/JSON interaction;
-- multi-client agent discovery/integration.
+- multi-client discovery/integration.
 
-**INFERENCE:** Backlog.md is a strong falsification test for the claim that AWCP needs a custom work schema or database.
+**INFERENCE:** Backlog.md is a strong falsification test for the need for a custom AWCP work schema/database.
 
-## 4.3 Task Master AI
+## 5.3 Task Master AI
 
 Primary source: [eyaltoledano/claude-task-master](https://github.com/eyaltoledano/claude-task-master).
 
 Task Master combines task/dependency management with AI-assisted decomposition, research and execution-oriented features.
 
-Useful lessons:
+Useful lessons include work decomposition, dependencies and coding-agent/task integration.
 
-- work decomposition patterns;
-- dependencies and ready work;
-- integration between task state and coding agents.
-
-Boundary mismatch:
-
-- model-provider configuration and model invocation are more central than AWCP currently intends;
-- execution loops move toward owning the runtime/orchestration boundary.
-
-**INFERENCE:** useful comparative evidence, but not the target abstraction.
+Boundary mismatch: model-provider configuration and execution loops move closer to runtime ownership than AWCP currently intends.
 
 ---
 
-# 5. Spec and development-process systems
+# 6. Spec and development-process systems
 
-These projects increasingly provide structured work and governance around existing coding agents.
+These projects increasingly provide structured work, methodology and governance around existing coding agents.
 
-## 5.1 GitHub Spec Kit
+## 6.1 GitHub Spec Kit
 
 Primary sources:
 
@@ -310,10 +345,6 @@ Its default flow is:
 Spec → Plan → Tasks → Implement
 ```
 
-Current documentation also advertises broad coding-agent portability and extension mechanisms.
-
-**INFERENCE:** Treating Spec Kit merely as a spec generator is obsolete. It is a serious composition candidate for AWCP.
-
 Potentially reusable:
 
 - intent-centered artifact flow;
@@ -322,17 +353,17 @@ Potentially reusable:
 - extensions/presets/workflows;
 - portable process installation.
 
-Remaining AWCP questions:
+Remaining AWCP questions include:
 
 - persistent ready/blocked work independent of a spec phase model;
-- cross-client guarantee semantics for enforcement;
-- evidence as a general work primitive;
-- capability requirements independent of named process stages;
-- minimal control state across arbitrary client/session switching.
+- explicit role composition and independence semantics;
+- role-specific context and permissions;
+- cross-client guarantee semantics;
+- evidence/completion across arbitrary work classes.
 
-**HYPOTHESIS:** `Spec Kit + existing work substrate + native client enforcement` may be enough. AWCP must try to prove itself unnecessary before implementing equivalents.
+**HYPOTHESIS:** `Spec Kit + work substrate + client-native role/policy mechanisms` may be sufficient. AWCP must try to prove itself unnecessary before implementing equivalents.
 
-## 5.2 Spec Kitty
+## 6.2 Spec Kitty
 
 Primary source: [Priivacy-ai/spec-kitty](https://github.com/Priivacy-ai/spec-kitty).
 
@@ -349,127 +380,131 @@ Boundary mismatch:
 
 - stronger methodology ownership;
 - worktree-centric execution;
-- more opinionated work-package lifecycle than AWCP has justified.
+- more opinionated lifecycle than AWCP has yet justified.
 
-**INFERENCE:** It demonstrates that persistent governed work around existing agents is feasible, but does not establish that AWCP's thinner compositional approach is necessary.
-
-## 5.3 GSD / Get Shit Done
+## 6.3 GSD / Get Shit Done
 
 Primary sources:
 
 - [gsd-build/get-shit-done](https://github.com/gsd-build/get-shit-done)
 - [GSD architecture](https://github.com/gsd-build/get-shit-done/blob/main/docs/ARCHITECTURE.md)
 
-GSD provides structured project state, research/planning/execution/verification phases and support for multiple coding runtimes.
+GSD provides structured project state, research/planning/execution/verification phases and multiple coding-runtime support.
 
 Useful patterns:
 
-- file-based continuity across context resets;
+- file-based continuity;
 - phase-specific context selection;
 - verification as first-class work;
-- multi-runtime translation/integration.
+- multi-runtime integration.
 
-Boundary mismatch:
+Boundary mismatch: GSD owns a stronger process and specialized-agent orchestration architecture than AWCP currently intends.
 
-- opinionated process ownership;
-- specialized-agent orchestration;
-- stronger ownership of execution progression than AWCP intends.
-
-## 5.4 BMAD Method
+## 6.4 BMAD Method
 
 Primary source: [bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD).
 
-BMAD is valuable as evidence for complexity/risk-adaptive process and explicit role specialization, but its persona/workflow-heavy architecture conflicts with AWCP's current principle:
+BMAD becomes **more relevant** after restoring roles as first-class responsibilities.
 
-```text
-WORK CAPABILITY ≠ AGENT ROLE ≠ MODEL
-```
+Useful research questions now include:
 
-**INFERENCE:** treat BMAD as a process-pattern library, not a substrate.
+- which specialized roles encode genuinely distinct responsibility?
+- which role compositions improve outcomes for particular work classes?
+- how does complexity/risk adaptation alter the role structure?
 
-## 5.5 Agent OS
+However, AWCP should still avoid importing a large fixed persona catalog or mandatory workflow merely because BMAD provides one.
+
+**INFERENCE:** BMAD is valuable as a role/methodology pattern library, not necessarily as AWCP's substrate.
+
+## 6.5 Agent OS
 
 Primary source: [buildermethods/agent-os](https://github.com/buildermethods/agent-os).
 
 Useful patterns include standards discovery, specification improvement and contextual policy injection alongside existing coding tools.
 
-It appears less focused on persistent work readiness/dependencies, generalized evidence and heterogeneous enforcement guarantees.
+It appears less focused on persistent dependency/readiness state, generalized role composition and heterogeneous enforcement guarantees.
 
 ---
 
-# 6. Agent orchestration and supervision systems
+# 7. Agent orchestration and supervision systems
 
-These projects are important primarily as a **boundary test**.
+These systems are no longer merely an anti-pattern category. AWCP needs **some orchestration semantics**, because required roles must be materialized and coordinated.
 
-They often manage workers, sessions or agent loops rather than the semantic work itself.
+The boundary should instead be stated precisely.
 
-Examples include:
-
-- Maestro;
-- Agent Deck;
-- Gas Town;
-- Ralph-style iterative loops;
-- session/worktree supervisors;
-- multi-agent coordination buses.
-
-Their useful patterns may include:
-
-- visibility into active agent execution;
-- handoffs and ownership;
-- parallel work isolation;
-- retry/recovery;
-- multi-agent scheduling;
-- agent/session lifecycle.
-
-But those concerns belong closer to:
+AWCP may need to determine:
 
 ```text
-worker coordination / execution plane
+this work requires Developer + Tester + Reviewer
+Tester must run after implementation
+Reviewer must be independent
+these roles require these contexts/permissions
+these outputs/evidence are expected
 ```
 
-than to AWCP's primary object:
+AWCP does **not necessarily** need to own:
 
 ```text
-software work contract / governance / evidence
+agent process lifecycle
+model loops
+agent-to-agent messaging
+remote scheduling
+worker fleet management
+persistent worker daemons
 ```
 
-### Okto Nexus as an especially clear boundary example
+Projects such as Maestro, Agent Deck, Gas Town, Ralph-style systems and Okto Nexus remain relevant because they contain reusable patterns for:
 
-**FACT:** Okto Nexus describes itself as coordinating who does the work through shared context, ownership, handoffs and approvals, while Pulse structures what must be built.
+- session/worker materialization;
+- ownership and handoffs;
+- isolated execution;
+- retries;
+- parallelism;
+- observability;
+- multi-agent coordination.
 
-Source: [Okto Nexus](https://nexus.oktolabs.ai/).
-
-This provides a useful conceptual test:
-
-```text
-AWCP-like concern → what work exists, what it requires, what proves completion
-
-Nexus-like concern → which worker owns it, handoffs, coordination, worker communication
-```
-
-**HYPOTHESIS:** AWCP may need to expose information useful to orchestration systems without becoming one itself.
+**HYPOTHESIS:** AWCP may be able to delegate actual worker orchestration to coding-client-native features or an external orchestrator while remaining authoritative for **which role structure the work requires**.
 
 ---
 
-# 7. Coding-agent runtimes
+# 8. Existing coding agents are the target execution environment
 
-Target clients/runtimes include:
+Target clients include:
 
 - Claude Code;
 - Codex;
 - OpenCode;
 - Gemini CLI;
-- potentially OpenHands, SWE-agent and future tools where relevant.
+- potentially future equivalent coding agents.
 
-They are not competitors to AWCP in the same sense as Pulse or Spec Kit. They own execution surfaces AWCP intends to preserve.
+This point is central: AWCP is designed around the user's **existing daily coding-agent workflow**, not around asking the user to migrate to a custom agent application.
 
-The crucial research question is not whether they can code. It is:
+The key research questions are:
 
-> **What supported lifecycle, context, permission, policy, hook, plugin, skill, MCP, event and output surfaces do they expose for work control?**
+1. How can AWCP participate automatically when enabled?
+2. How can required roles be materialized through supported client-native mechanisms?
+3. How can role-specific context be injected or selected?
+4. How can role-specific permissions/policies be applied?
+5. How can outputs/evidence be collected reliably?
+6. How can independence between roles be achieved or at least represented honestly?
 
-AWCP requires an explicit distinction between semantic portability and mechanism parity.
+Potential surfaces include:
 
-A future adapter might need to report guarantees conceptually similar to:
+```text
+hooks
+permissions / policy engines
+skills
+plugins
+instructions
+native agents / subagents
+MCP
+CLI commands
+structured output
+events / telemetry
+wrappers
+```
+
+A future adapter may need to report guarantees conceptually similar to:
 
 ```text
 ENFORCEABLE
@@ -481,25 +516,78 @@ UNSUPPORTED
 
 This vocabulary remains **OPEN**.
 
-### The mandatory-participation problem
-
-A major uncertainty is whether AWCP can participate automatically whenever enabled without replacing the normal coding-client launch/runtime boundary.
+### Mandatory participation problem
 
 These mechanisms are not equivalent:
 
 ```text
 MCP tool available to the model
-instruction telling the model to query work
+instruction telling the model to consult AWCP
 client lifecycle hook
 blocking policy / permission
+native subagent mechanism
 external wrapper
 ```
 
-SPIKE-001 must measure actual behavior rather than infer guarantees from feature names.
+SPIKE-001 must measure actual behavior instead of inferring guarantees from feature names.
 
 ---
 
-# 8. General agent frameworks are a different abstraction layer
+# 9. Context, memory, permissions and observability: required capabilities, not necessarily AWCP products
+
+AWCP cannot work well without context and control infrastructure. But that does not mean those functions belong inside AWCP.
+
+## 9.1 Context and memory
+
+A Developer, Tester and Reviewer may need different context packages. AWCP may therefore need to express context requirements.
+
+The preferred research direction is:
+
+```text
+AWCP decides what context a role needs
+        ↓
+existing client/local context system provides it
+```
+
+rather than:
+
+```text
+AWCP needs context
+        ↓
+AWCP builds another retrieval/memory platform
+```
+
+## 9.2 Permissions and sandboxing
+
+Roles may need different authority. A reviewer may ideally be read-only while a developer can edit and execute tests.
+
+Again, the first question is which existing client-native, OS-level or external control systems can enforce this.
+
+## 9.3 Observability
+
+AWCP needs enough execution evidence and status to control work transitions. Existing telemetry/tracing systems may already provide much of it.
+
+A custom AWCP observability stack should only exist if the missing information is specifically work/role semantic state that existing systems cannot represent.
+
+## 9.4 Agent Control Planes as reusable infrastructure
+
+A local or enterprise Agent Control Plane could potentially provide identity, permission, policy or observability functions that AWCP consumes.
+
+The categories are therefore not competitors by definition:
+
+```text
+AWCP
+→ determines what the work / role requires
+
+Agent Control Plane / context system / coding client
+→ may provide the mechanism that satisfies the requirement
+```
+
+---
+
+# 10. The likely ecosystem gap: infrastructure is often designed for custom agents
+
+General agent frameworks and control infrastructure often expose excellent primitives for context, memory, permissions, state, checkpointing, observability and orchestration.
 
 Frameworks such as:
 
@@ -509,271 +597,245 @@ Frameworks such as:
 - OpenAI Agents SDK;
 - similar orchestration/runtime libraries;
 
-are useful when building an agent application or controlling its execution graph.
+are particularly natural when **building an agent application** whose runtime the developer owns.
 
-AWCP currently intends to work **with already-existing coding agents** whose runtimes it does not own.
+AWCP is asking a different integration question:
 
-Therefore these frameworks may contribute patterns for state machines, checkpointing, tool policies or observability, but they are not direct equivalents unless AWCP later decides to own an agent loop—which is currently outside its accepted boundary.
+> **Can those same classes of capability be reused around already-built coding agents without forcing the developer to replace Claude Code, Codex, OpenCode or Gemini CLI with a custom agent runtime?**
+
+**HYPOTHESIS:** This integration problem may be a more meaningful gap than any individual context, memory, permission or orchestration feature.
+
+If suitable local systems already exist, the desired architecture may become a thin semantic coordination layer plus adapters rather than a large platform.
 
 ---
 
-# 9. Emerging category map
+# 11. Revised category map
 
-The research now suggests several distinct layers that should not be collapsed under "agentic tooling":
+The research now suggests several distinct but composable layers:
 
 ```text
-┌──────────────────────────────────────────────┐
-│ SOFTWARE WORK / DELIVERY                    │
-│ intent · specs · tasks · constraints        │
-│ evidence · completion · project knowledge   │
-│                                              │
-│ Pulse / Spec systems / work substrates      │
-│ ← AWCP hypothesis lives primarily here      │
-└──────────────────────────────────────────────┘
-                      │
-                      ▼
-┌──────────────────────────────────────────────┐
-│ CODING-AGENT EXECUTION                      │
-│ Claude Code · Codex · OpenCode · Gemini CLI │
-│ agent loop · tools · context · edits        │
-└──────────────────────────────────────────────┘
-                      │
-           may coordinate workers through
-                      ▼
-┌──────────────────────────────────────────────┐
-│ AGENT / WORKER ORCHESTRATION                │
-│ sessions · ownership · handoffs · routing   │
-│ Nexus · Maestro · multi-agent systems       │
-└──────────────────────────────────────────────┘
-                      │
-           may be operated/governed by
-                      ▼
-┌──────────────────────────────────────────────┐
-│ AGENT CONTROL PLANE / ENTERPRISE OPS        │
-│ fleet · identity · lifecycle · security     │
-│ observability · cost · deployment           │
-│ IBM / Microsoft Foundry control planes      │
-└──────────────────────────────────────────────┘
+┌───────────────────────────────────────────────┐
+│ SOFTWARE WORK / METHODOLOGY                  │
+│ intent · packages · tasks · role requirements│
+│ constraints · evidence · completion          │
+│                                               │
+│ ← AWCP's primary semantic responsibility     │
+└───────────────────────────────────────────────┘
+                       │
+               requirements / roles
+                       ▼
+┌───────────────────────────────────────────────┐
+│ CODING-AGENT EXECUTION                       │
+│ Claude Code · Codex · OpenCode · Gemini CLI  │
+│ native agent loop · tools · edits            │
+└───────────────────────────────────────────────┘
+                       │
+             may consume capabilities from
+                       ▼
+┌───────────────────────────────────────────────┐
+│ AGENT INFRASTRUCTURE                         │
+│ context · memory · permissions · sandbox     │
+│ observability · policy · verification        │
+└───────────────────────────────────────────────┘
+                       │
+          optional worker coordination through
+                       ▼
+┌───────────────────────────────────────────────┐
+│ AGENT / WORKER ORCHESTRATION                 │
+│ sessions · handoffs · isolated workers       │
+│ scheduling · retries                         │
+└───────────────────────────────────────────────┘
+                       │
+          optional fleet-level governance by
+                       ▼
+┌───────────────────────────────────────────────┐
+│ AGENT CONTROL PLANE / ENTERPRISE OPS         │
+│ identity · lifecycle · fleet · security      │
+│ deployment · runtime health · cost           │
+└───────────────────────────────────────────────┘
 ```
 
-The exact topology differs by product. The value of the diagram is categorical: **work, execution, worker coordination and fleet operations are separate concerns even when products combine them.**
+Products may combine layers. The analytical distinction helps AWCP decide what to **own**, what to **integrate**, and what to leave entirely outside scope.
 
 ---
 
-# 10. What appears already solved or commoditized
+# 12. What appears already solved or commoditized
 
-The following no longer look like strong standalone reasons to build AWCP:
+These no longer look like strong standalone reasons to build AWCP:
 
-### Structured specifications
+- structured specifications;
+- durable tasks and dependencies;
+- ready/blocked calculation;
+- human-readable local project state;
+- generic MCP/CLI access;
+- context retrieval as a general capability;
+- generic agent memory products;
+- permission/sandbox primitives;
+- generic observability/tracing;
+- tests, linters, scanners and CI verification;
+- dashboards/TUIs;
+- generic agent fleet governance;
+- generic custom-agent SDKs and orchestration frameworks.
 
-Spec Kit, Spec Kitty, GSD, Pulse and others already provide mature patterns.
-
-### Persistent task/work records
-
-Beads, Backlog.md, Pulse and conventional issue systems already cover substantial ground.
-
-### Dependency and ready-work calculation
-
-Existing work substrates already implement this.
-
-### Human-readable local project state
-
-Markdown-first and local-first systems demonstrate multiple viable approaches.
-
-### Agent access through MCP/CLI/instructions
-
-This is broadly available as an integration pattern.
-
-### Dashboards / boards / TUIs
-
-Visibility alone is not a product gap.
-
-### Named specialized agents
-
-Many frameworks already implement role/persona-driven pipelines. Recreating them is not differentiation.
-
-### Generic agent fleet governance
-
-IBM, Microsoft and other platforms are explicitly building this category. It is outside AWCP's primary scope anyway.
+AWCP should consume or compose these where possible.
 
 ---
 
-# 11. What appears partially solved
+# 13. What appears partially solved
 
-## 11.1 Cross-client work continuity
+## 13.1 Cross-client work continuity
 
-Many systems support multiple coding agents, but portability often means "we generate/install the right instructions for each client" rather than a proven semantic guarantee that one client can continue another's work state safely.
+Many systems support multiple coding agents, but portability often means installing equivalent instructions rather than proving one shared semantic work state across clients.
 
-## 11.2 Work governance
+## 13.2 Role-driven methodology across heterogeneous coding agents
 
-Specs, acceptance criteria, review states and quality gates are common. The unresolved question is how much of that can be made technically enforceable across heterogeneous coding clients without owning the runtime.
+Many methodologies use specialized agents, while many coding clients expose some native form of agents/subagents. What is less clear is whether a **client-independent role requirement** can be expressed once and reliably materialized across heterogeneous clients.
 
-## 11.3 Evidence-driven completion
+## 13.3 Separation of responsibility
 
-Several systems have tests, validation and review concepts. A portable semantic model that connects arbitrary work requirements to evidence and completion may still be less standardized.
+Review/testing stages are common, but the ability to state and enforce that the implementing executor cannot satisfy an independent review role may vary significantly by client/runtime.
 
-## 11.4 Adaptive structure
+## 13.4 Context and permission composition
 
-Risk/complexity-adaptive workflows exist, but many systems still encode process primarily through named stages or agent roles.
+The individual capabilities exist, but it remains uncertain whether AWCP can consistently request a role-specific context/permission profile from existing daily coding agents and external local systems.
 
-The AWCP hypothesis of:
+## 13.5 Evidence-driven completion
+
+Several systems have tests, validation and review concepts. A portable model connecting **role responsibility → evidence → completion** remains less standardized.
+
+## 13.6 Adaptive organization
+
+Risk/complexity-adaptive workflows exist. AWCP's specific hypothesis is:
 
 ```text
 work characteristics
     ↓
-required capabilities / gates
+required role composition
+    ↓
+role capabilities / context / permissions
     ↓
 client-specific realization
 ```
 
-remains unvalidated.
-
-## 11.5 Human-readable and machine-native state
-
-Existing systems show this is feasible. The unresolved question is not feasibility but the **minimal semantic core** required for interoperability and governance.
+This remains unvalidated.
 
 ---
 
-# 12. What remains genuinely uncertain
+# 14. What remains genuinely uncertain
 
-These are the questions that currently justify research.
+## 14.1 Is there a reusable work-control abstraction independent of methodology implementation?
 
-## 12.1 Is there a reusable work-control abstraction independent of methodology?
+Can AWCP describe work and required responsibilities without becoming either a lowest-common-denominator task schema or another huge workflow DSL?
 
-Could the same semantic work object survive across:
+## 14.2 Which roles are real responsibilities rather than persona theatre?
 
-- Spec Kit;
-- Beads;
-- Backlog.md;
-- Pulse;
-- a simple repository;
-- different coding clients;
+The project needs evidence for a minimal role set and composition rules grounded in actual software work.
 
-without becoming the lowest-common-denominator abstraction that helps nobody?
+## 14.3 Can role composition be portable without runtime ownership?
 
-## 12.2 Can critical work control be portable without runtime ownership?
+This is one of the central risks. If independent Developer/Tester/Reviewer roles cannot be reliably materialized through existing coding clients, AWCP may need to weaken guarantees or revisit its boundary.
 
-The product vision requires coding clients to remain primary. That makes heterogeneous integration guarantees the central architectural risk.
+## 14.4 Can infrastructure be composed rather than rebuilt?
 
-## 12.3 Does AWCP need to own work state?
+AWCP should attempt to use existing context, memory, permissions, sandboxing and observability systems. The unresolved issue is whether their integration surfaces fit existing coding agents rather than only custom runtimes.
 
-It may be enough to own only:
+## 14.5 Does AWCP need to own work state?
+
+It may be enough to own only role/control metadata and references around an existing work substrate. Or even that may prove unnecessary.
+
+## 14.6 What does "done" mean across work types?
+
+Implementation, research, debugging, migration, documentation and architecture work may require different roles and evidence.
+
+---
+
+# 15. Potential genuine gap
+
+The strongest current hypothesis is:
+
+> **Provide a small, local and agent-agnostic work-control layer that turns software work into explicit role-driven execution contracts, then composes existing coding-agent and agent-infrastructure capabilities to carry them out without replacing the developer's normal coding client.**
+
+Potential differentiation, if validated, comes from the combination of:
+
+1. **work-first semantics** rather than fleet-first semantics;
+2. **role-driven methodology** — work derives the responsibilities that must participate;
+3. **role portability** — responsibility is independent of client/model implementation;
+4. **adaptive composition** rather than one mandatory global pipeline;
+5. **separation-of-responsibility semantics** where required;
+6. **role-specific context and permission requirements**;
+7. **evidence attached to responsibilities and completion**;
+8. **integration with existing coding agents**, not a required custom agent runtime;
+9. **reuse of existing context/control/observability infrastructure** rather than rebuilding it;
+10. **human-readable persistent work state** with minimal ownership.
+
+None of these points yet proves a separate implementation should exist.
+
+---
+
+# 16. Falsification criteria
+
+AWCP should shrink radically or not be built as a separate system if existing tools can provide the desired experience through small composition.
+
+Examples:
 
 ```text
-control metadata
-constraints
-cross-system references
-evidence links
-completion state
+Spec Kit + Beads + client-native roles/hooks/policies
+
+Backlog.md + coding-client agents + external context/control system + CI evidence
+
+Okto Pulse + Nexus configured to provide required role methodology
+
+coding-client-native agents + project memory + Git/CI + minimal semantic glue
 ```
 
-while specs/tasks remain authoritative elsewhere.
+The right research question is:
 
-Or even that may be unnecessary.
+> **What is the smallest composition that gives us persistent, role-driven, governed and verifiable software work across the coding agents we already use?**
 
-## 12.4 Is capability-driven reasoning useful?
-
-The distinction:
-
-```text
-WORK CAPABILITY ≠ AGENT ROLE ≠ MODEL
-```
-
-is conceptually attractive but unproven. A spike must show that it leads to better, simpler or more portable work control than fixed workflows.
-
-## 12.5 What does "done" mean across work types?
-
-Implementation, research, debugging, migration, documentation and architecture work may require very different evidence. A universal completion model may be a mistake.
+Only the irreducible gap should become owned AWCP architecture.
 
 ---
 
-# 13. Potential genuine gap
-
-The strongest remaining hypothesis is narrower than the project's original formulation.
-
-It is **not**:
-
-> Build a control plane for coding agents.
-
-It is closer to:
-
-> **Provide a small, local and agent-agnostic semantic control layer for software work, so heterogeneous coding agents can participate in the same persistent work state, constraints and evidence model without requiring the control layer to own their execution runtime.**
-
-Possible differentiation, if validated, would come from the combination of:
-
-1. **work-first semantics** rather than agent-first semantics;
-2. **methodology independence** rather than one mandatory SDLC pipeline;
-3. **executor independence** — agent, human or deterministic tool;
-4. **portable governance semantics** with explicit differences between guidance, verification and enforcement;
-5. **evidence-backed completion**;
-6. **minimal ownership/composability** with existing work/spec systems;
-7. **cross-client continuity** without replacing the coding client.
-
-None of these points is yet sufficient evidence that a new implementation should exist.
-
----
-
-# 14. Falsification criteria
-
-AWCP should not be built as a separate system if experiments show that a small composition of existing tools provides the desired experience.
-
-Examples that could falsify or radically shrink the project:
-
-```text
-Spec Kit + Beads + native client hooks/policies
-
-Backlog.md + supported client integration + CI evidence
-
-Okto Pulse configured/extended to avoid unwanted methodology coupling
-
-coding-client-native project memory + Git/CI with minimal glue
-```
-
-A useful research program should therefore ask:
-
-> **What is the smallest composition that already gives us persistent, governed and verifiable software work across coding agents?**
-
-Only the remaining irreducible gap should become owned AWCP architecture.
-
----
-
-# 15. Research conclusion
+# 17. Research conclusion
 
 ## Already solved / commoditized
 
 - structured specs and plans;
-- durable tasks and dependencies;
-- ready/blocked work in existing substrates;
-- Markdown/local-first project state;
-- MCP/CLI agent access;
-- many review and verification patterns;
-- coding-client portability at the installation/instruction level;
-- dashboards and work visualization;
-- agent fleet governance as a separate enterprise category.
+- durable tasks/dependencies;
+- ready/blocked work;
+- local/human-readable project state;
+- generic context and memory systems;
+- permission/sandbox primitives;
+- observability/tracing systems;
+- deterministic verification tooling;
+- custom-agent frameworks;
+- generic worker orchestration patterns;
+- agent fleet governance.
 
 ## Partially solved
 
 - cross-client continuity;
-- persistent work governance;
-- evidence-linked completion;
-- adaptive process by risk/type;
-- multi-client integration around one work model;
-- human/agent sharing of structured work artifacts.
+- role-driven methodology around existing coding agents;
+- independent role realization;
+- portable context/permission requirements;
+- work governance across heterogeneous clients;
+- evidence linked to specific responsibilities;
+- adaptive role composition by work type/risk.
 
 ## Still uncertain
 
-- minimal AWCP semantic model;
-- whether AWCP must own any work substrate;
-- portable enforcement guarantees;
-- mandatory participation while preserving native coding clients;
-- capability-driven work control;
-- evidence/completion semantics across work types;
-- persistence and concurrency requirements.
+- minimal AWCP work/role model;
+- minimum useful role taxonomy;
+- role-composition rules;
+- cross-client role materialization;
+- role independence guarantees;
+- integration with existing local context/control systems;
+- mandatory AWCP participation while preserving native coding clients;
+- what state AWCP actually needs to own;
+- persistence/concurrency requirements.
 
 ## Potential genuine gap
 
-A **thin work-control layer** between durable software-work semantics and heterogeneous coding-agent execution may remain underserved.
+A **thin work-methodology control layer** may be underserved: one that tells existing coding agents not only *what work exists*, but **which distinct agent responsibilities must participate, under what context/permissions, and what evidence each must produce**—while delegating the underlying context, permission, runtime and observability machinery to systems that already solve those problems.
 
-But Okto Pulse, Spec Kit and existing work substrates make the bar substantially higher than the original hypothesis suggested.
-
-The next phase must therefore optimize for **falsification and composition**, not feature design.
+The next phase should optimize for **composition and falsification**, not feature accumulation.
