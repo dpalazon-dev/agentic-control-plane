@@ -10,7 +10,7 @@ The current hypothesis is specifically about **daily software development with e
 
 It is not a catalog of AI-development tools and it does not assume that a new product needs to exist.
 
-Research snapshot refreshed on **2026-08-09** using official documentation, official repositories and recent papers where possible. External systems move quickly; claims about current products must be revalidated during the relevant spike before becoming architecture.
+Research snapshot refreshed on **2026-08-12** using official documentation, official repositories and recent papers where possible. External systems move quickly; claims about current products must be revalidated during the relevant spike before becoming architecture.
 
 ### Evidence labels
 
@@ -95,11 +95,17 @@ This naming distinction does not prove novelty. It identifies the governed objec
 
 # 2. Research baseline: software development is converging around explicit work artifacts
 
-## 2.1 No single "AI Scrum" is emerging
+## 2.1 The reviewed evidence does not establish a single "AI Scrum"
 
 **FACT:** A June 2026 comparative study of GitHub Spec Kit, OpenSpec, BMAD, GSD, Spec Kitty and Reversa found convergence away from isolated prompting and toward persistent artifacts, work contracts, traceability and human review. Its taxonomy compares specification, context, roles, execution, validation and portability, and reports that no evaluated framework strongly covers every dimension.
 
 Source: [From Prompt to Process: a Process Taxonomy and Comparative Assessment of Frameworks Supporting AI Software Development Agents](https://arxiv.org/abs/2606.04967).
+
+**FACT:** The same study describes BMAD as making familiar agile artifacts consumable by agents rather than replacing agile practices. The SDD technical report likewise treats agile user stories, acceptance criteria and Definition of Done as compatible specification artifacts.
+
+**INFERENCE:** The defensible claim is not that the state of the art has proved there can be no replacement for Scrum or Kanban. It is narrower:
+
+> The reviewed evidence does not identify or validate one general replacement. Current frameworks compose agent-oriented specification, context, roles, execution and validation with existing software-engineering practices in different ways.
 
 **INFERENCE:** The emerging pattern is not a replacement ceremony framework but an increasingly explicit delivery chain:
 
@@ -131,7 +137,7 @@ The important correction for AWCP is that **responsibility assignment cannot be 
 
 Source: [OpenAI — Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/).
 
-**FACT:** Recent research on agentic harness engineering treats tools, middleware, memory, task state, observability, verification and intervention handling as important parts of a reliable coding-agent system.
+**FACT:** Recent research on agentic harness engineering treats tools, interfaces, memory, execution constraints and feedback loops as important parts of a coding-agent harness. In the reported AHE experiments, gains concentrated in tools, middleware and long-term memory rather than the system prompt alone.
 
 Sources:
 
@@ -144,7 +150,7 @@ This is directly relevant to AWCP because role-driven execution needs context, m
 
 ## 2.3 Spec-driven development is becoming infrastructure rather than documentation
 
-**FACT:** Recent work on Spec-Driven Development distinguishes increasingly authoritative uses of specifications and studies linked artifacts across specification, planning, tasks, implementation and verification.
+**FACT:** The reviewed SDD technical report distinguishes three levels of rigor: `spec-first`, `spec-anchored` and `spec-as-source`. Its common workflow is `Specify -> Plan -> Implement -> Validate`; implementation is decomposed into reviewable tasks, and each phase produces an artifact that constrains the next.
 
 Sources:
 
@@ -152,6 +158,94 @@ Sources:
 - [Spec Kit Agents: Context-Grounded Agentic Workflows](https://arxiv.org/abs/2604.05278)
 
 **INFERENCE:** AWCP should not equate persistent work with "a better PRD". The important pattern is the relationship between intent, decomposed work, responsibility, context, constraints, outcomes and evidence.
+
+**INFERENCE:** AWCP should also not make the strongest specification discipline mandatory for every task. The SDD report recommends the minimum rigor that removes material ambiguity and warns that over-specification, specification rot, generated-artifact overload, bureaucracy and false confidence can erase the value of the method.
+
+## 2.4 Critical assessment of the reviewed evidence
+
+These sources support the direction of AWCP, but they do not prove the complete product hypothesis.
+
+### From Prompt to Process
+
+**FACT:** The paper contributes a useful six-dimension taxonomy and an explicit 0-2 scoring rubric. Its comparison gives the strongest total score to BMAD (`10/12`), followed by Spec Kitty (`9/12`), while finding a recurring tension between process depth and portability. Roles and validation are the most discriminating dimensions; specification is already common across the compared frameworks.
+
+**FACT:** Its method is a directed, qualitative and non-exhaustive search, not a systematic review. The framework assessments are based mainly on official documentation, most frameworks lack independent academic evaluation, one author assigned the scores without a second coder, and the paper declares a conflict of interest around Reversa.
+
+**INFERENCE:** The taxonomy is suitable as a structured comparison lens and falsification checklist. Its scores are not product benchmarks and should not be used as proof that AWCP is novel or superior.
+
+Direct AWCP implications:
+
+- adopt `specification / context / roles / execution / validation / portability` as an external evaluation lens;
+- focus especially on roles, validation and portability, where the comparison finds the largest gaps;
+- treat specification-code drift, extension supply-chain risk, platform dependence and lack of complete-process benchmarks as first-class risks;
+- measure whether role decomposition improves outcomes or merely adds coordination overhead.
+
+### OpenAI harness-engineering account
+
+**FACT:** OpenAI reports that early limitations came from an underspecified environment and missing tools, abstractions and structure. Its operating loop decomposes work into design, code, review and test, requests additional agent reviews, exposes application behavior and observability to Codex, and mechanically enforces architectural invariants.
+
+**FACT:** The team reports that one monolithic `AGENTS.md` failed because it consumed context, became stale and was hard to verify. Their replacement uses a short `AGENTS.md` as a map into structured repository knowledge, plans and mechanically checked documentation.
+
+**FACT:** This is a first-party engineering account of one greenfield repository, not a controlled comparison. OpenAI explicitly says the resulting autonomy depends on that repository's specific structure and tooling and should not be assumed to generalize. Long-term architectural coherence remains unknown.
+
+**INFERENCE:** This strongly supports AWCP-DEC-005: narrative instructions should direct agents toward authoritative state and deterministic checks, not attempt to contain the entire method. It also supports keeping project knowledge and work control structured, inspectable and mechanically verifiable.
+
+### Spec-Driven Development: From Code to Contract
+
+**FACT:** This eight-page technical report is primarily a practitioner guide and conceptual synthesis. It describes a four-phase workflow, three specification-authority levels and a decision framework for selecting rigor by context.
+
+**FACT:** It says SDD may be excessive for throwaway prototypes, short-lived solo work, exploration and obvious CRUD requirements. It also warns that passing checks only proves conformance to the specification; a wrong specification can still produce wrong software.
+
+**INFERENCE:** The report supports linked work artifacts and adaptive rigor, but it does not itself empirically validate contextual hooks, role separation or AWCP's completion model. Those claims need separate evidence.
+
+Direct AWCP implications:
+
+- derive the required work contract from ambiguity, longevity, risk and coordination needs;
+- allow a lightweight `Intent + Task` path for small work instead of forcing a full work package;
+- distinguish evidence that code matches a contract from evidence that the contract matches human intent;
+- make specification change and re-approval explicit when validation reveals that the accepted intent was wrong.
+
+### Agentic Harness Engineering
+
+**FACT:** AHE represents harness components, rollout experience and edit decisions as observable artifacts. Every harness edit carries a predicted effect that the next evaluation round checks, allowing ineffective changes to be reverted.
+
+**FACT:** On one ten-iteration campaign using 89 Terminal-Bench 2 tasks, AHE increased pass@1 from `69.7%` to `77.0%`; the reported Codex harness scored `71.9%`. On SWE-bench Verified, the frozen AHE harness reached the highest aggregate success in its comparison with fewer tokens than its seed. Component ablations found positive gains from memory, tools and middleware, while the system-prompt-only variant regressed from `69.7%` to `67.4%`.
+
+**FACT:** The result has important limits: the system was optimized on one operating point; broader repositories and human-in-the-loop workflows were not tested; component effects were non-additive; regression prediction remained weak; and the authors describe AHE as a controlled research prototype without a complete guardrail stack.
+
+**INFERENCE:** AHE supports the proposition that executable structure can outperform additional prompt prose. It does not validate AWCP's role taxonomy, role independence, work-state model or use of Codex native hooks. Its direct design lesson for AWCP is narrower: control changes and methodology changes should be observable, versioned, falsifiable and evaluated against outcomes.
+
+Candidate later requirements derived from AHE:
+
+- version methodology and role-policy changes;
+- record the evidence and expected effect behind each policy change;
+- compare predicted and observed effects on task outcomes;
+- preserve rollback and auditability;
+- track regressions explicitly rather than optimizing only aggregate success.
+
+## 2.5 Consolidated evidence position
+
+Taken together, the four sources support this chain:
+
+```text
+clear intent and proportional specification
+  -> persistent, linked work artifacts
+  -> role and responsibility structure where justified
+  -> executable environment and technical boundaries
+  -> observable execution and evidence
+  -> validation against both contract and human intent
+  -> versioned learning and correction
+```
+
+They do **not** establish:
+
+- a universal replacement for Scrum or Kanban;
+- one mandatory artifact sequence for every task;
+- that more roles always improve quality;
+- that a written specification is necessarily correct;
+- that prompt instructions alone can guarantee the process;
+- that AWCP must implement its own harness, context system, memory or agent runtime;
+- that the AWCP product hypothesis is already empirically validated.
 
 ---
 
@@ -224,11 +318,58 @@ The key research challenge is whether this structure can be materialized through
 
 ---
 
-# 4. The closest direct comparable: Okto Pulse / Nexus
+# 4. Closest direct comparables
+
+## 4.1 OpenAI Symphony: work-to-agent execution orchestration
+
+OpenAI Symphony is now the closest Codex-specific comparator for the execution side of the problem.
+
+**FACT:** Symphony turns an issue tracker into the control plane for a long-running Codex orchestrator. It polls eligible issues, creates a dedicated workspace per issue, launches Codex through App Server, tracks attempts, retries failures and exposes operational status. Its repository-owned `WORKFLOW.md` supplies the execution policy and prompt.
+
+Sources:
+
+- [OpenAI - An open-source spec for Codex orchestration: Symphony](https://openai.com/index/open-source-codex-orchestration-symphony/)
+- [OpenAI Symphony specification](https://github.com/openai/symphony/blob/main/SPEC.md)
+
+The important architectural boundary in the specification is:
+
+```text
+issue tracker
+    -> scheduler / runner
+    -> per-issue workspace
+    -> Codex App Server session
+    -> retry / reconciliation / status
+```
+
+Symphony therefore provides strong falsification evidence against AWCP owning generic:
+
+- tracker polling and task dispatch;
+- agent-per-task process lifecycle;
+- workspace isolation;
+- retries, restart recovery and concurrency scheduling;
+- the App Server execution loop.
+
+These are real and useful capabilities, but they are **execution orchestration**, not the irreducible AWCP work-control hypothesis.
+
+The product boundaries remain materially different:
+
+```text
+Symphony -> reads tracker work and owns managed Codex execution
+AWCP      -> owns semantic work, required roles, evidence and completion
+             while Codex retains its native interactive execution loop
+```
+
+Symphony uses issue state as the workflow state machine and generally assigns one running agent to each eligible issue. It does not establish a portable semantic contract for work-derived Developer/Tester/Reviewer responsibilities, independence between those responsibilities or evidence requirements attached to each role.
+
+Its reported increase in landed pull requests is first-party operational evidence, not a controlled quality or correctness comparison. OpenAI also states that ambiguous or judgment-heavy work may still fit interactive Codex better, and that rigid agent state-machine nodes proved too limiting.
+
+**INFERENCE:** Symphony validates work, rather than the conversation tab, as the durable coordination unit. It also validates App Server as a practical managed-run integration. It does not validate AWCP's role model, and it gives AWCP a reason to integrate with or remain compatible with external execution orchestrators rather than reproducing one.
+
+## 4.2 Okto Pulse / Nexus: work and worker coordination
 
 The work-versus-workers distinction makes OktoLabs especially relevant.
 
-## 4.1 Pulse organizes work; Nexus organizes workers
+### Pulse organizes work; Nexus organizes workers
 
 **FACT:** OktoLabs explicitly separates two layers:
 
@@ -249,7 +390,7 @@ Nexus → workers
 
 This is useful evidence that **work structure** and **worker/agent coordination** are separable concerns.
 
-## 4.2 What this means for AWCP
+### What this means for AWCP
 
 Pulse already demonstrates much of the proposition that agent-assisted software work benefits from:
 
@@ -462,6 +603,8 @@ Projects such as Maestro, Agent Deck, Gas Town, Ralph-style systems and Okto Nex
 - parallelism;
 - observability;
 - multi-agent coordination.
+
+OpenAI Symphony is a particularly direct Codex example: it owns tracker polling, dispatch, isolated workspaces, App Server sessions, retries and reconciliation. Those mechanisms should be treated as an external execution-orchestration option, not silently absorbed into AWCP's work-control core.
 
 **HYPOTHESIS:** AWCP may be able to delegate actual worker orchestration to coding-client-native features or an external orchestrator while remaining authoritative for **which role structure the work requires**.
 
@@ -678,6 +821,7 @@ These no longer look like strong standalone reasons to build AWCP:
 - dashboards/TUIs;
 - generic agent fleet governance;
 - generic custom-agent SDKs and orchestration frameworks.
+- task-to-agent dispatch, isolated workspaces, retries and App Server run loops for managed Codex execution.
 
 AWCP should consume or compose these where possible.
 
@@ -720,6 +864,10 @@ client-specific realization
 ```
 
 This remains unvalidated.
+
+## 13.7 Session attribution and operator inspection
+
+Symphony demonstrates rich observation for Codex runs that the orchestrator itself launches. The partially solved case for AWCP is different: attributing work, role and evidence across ordinary interactive Codex sessions without taking ownership of those sessions.
 
 ---
 
@@ -789,6 +937,8 @@ AWCP core/TUI + Backlog.md + coding-client agents + CI evidence
 AWCP core/TUI + reusable Okto Pulse/Nexus capabilities
 
 AWCP core/TUI + coding-client-native agents + project memory + Git/CI
+
+AWCP core/TUI + Symphony or another external runner for optional managed execution
 ```
 
 The right research question is now:
@@ -813,6 +963,7 @@ Only that irreducible work-control core should become owned AWCP architecture; a
 - deterministic verification tooling;
 - custom-agent frameworks;
 - generic worker orchestration patterns;
+- managed Codex dispatch, workspace isolation, retries and run observation;
 - agent fleet governance.
 
 ## Partially solved

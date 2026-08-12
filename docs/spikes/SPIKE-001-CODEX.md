@@ -74,7 +74,7 @@ Disabling the Codex integration may permit ungoverned repository activity, but i
 
 | Surface | Verified Codex behavior | AWCP use | Honest guarantee |
 | --- | --- | --- | --- |
-| `AGENTS.md` | Codex builds a layered instruction chain from user and project files before work; deeper files override earlier guidance. | Baseline methodology, project conventions and the requirement to use AWCP. | `INJECTABLE`, `GUIDANCE_ONLY` |
+| `AGENTS.md` | Codex builds a layered instruction chain from user and project files before work; deeper files override earlier guidance. | Short map to AWCP, project policy and deeper authoritative sources. Do not embed the complete methodology or work state. | `INJECTABLE`, `GUIDANCE_ONLY` |
 | Skills | Skills can be invoked explicitly or selected implicitly when their description matches. | Reusable intake and role playbooks. | `INJECTABLE`, `GUIDANCE_ONLY` |
 | Custom agents | Project or user agent profiles define a name, description and developer instructions and may set model, effort, sandbox, MCP and skills. | Named `developer`, `tester`, `code-reviewer`, `architect`, `critic` and `security-reviewer` executor profiles. | `INJECTABLE`; profile settings are enforceable only where the parent runtime permits them |
 | Subagents | Codex can spawn, wait for, continue and close subagent threads; activity is inspectable in supported clients. | Materialize role separation and collect role-specific evidence. | `OBSERVABLE`; spawning remains instruction-driven |
@@ -131,6 +131,8 @@ AWCP should record native identifiers, not infer them from text or filesystem pa
 
 The TUI may use App Server `thread/list`, `thread/read` and experimental turn/item pagination to enrich history without parsing rollout JSONL directly. Documentation confirms that stored interactive `cli` and `vscode` threads can be listed and filtered, including spawned descendants. Whether a second App Server process can provide sufficiently fresh, contention-free observation of an actively open desktop task remains an empirical question.
 
+OpenAI Symphony provides a first-party operational precedent for the other App Server use case: a long-running orchestrator can create and observe Codex sessions programmatically, maintain per-task workspaces and reconcile retries. This confirms the technical viability of **managed execution**; it does not establish passive observation of an interactive desktop task owned by another process.
+
 ## Recommended Codex integration shape
 
 ```text
@@ -157,6 +159,8 @@ The recommended distribution unit is a Codex plugin containing:
 Custom agent profiles should initially be installed through Codex's documented user or project agent directories. The reviewed plugin documentation confirms packaging for skills, MCP and hooks, but does not establish plugin packaging as a supported custom-agent distribution contract.
 
 `AGENTS.md` remains project policy, not the source of truth. The local service remains the source of truth, not MCP, hooks, the plugin or the TUI.
+
+Keep `AGENTS.md` small and navigational. OpenAI's harness-engineering account reports that a monolithic instruction file consumed scarce context, became stale and resisted mechanical verification; its replacement used a short file as a map into structured, checked sources of truth. AWCP task context should be injected from the authoritative service at the relevant lifecycle event rather than copied into a growing repository manual.
 
 ### Strict installation modes
 
@@ -360,7 +364,7 @@ Rejected because a required server can guarantee availability, not that the mode
 
 ### App Server or SDK as the default execution path
 
-Rejected for the primary interactive experience because it would make AWCP launch or own Codex conversations. It remains valid for optional managed jobs and TUI history enrichment.
+Rejected for the primary interactive experience because it would make AWCP launch or own Codex conversations. OpenAI Symphony demonstrates that this shape is technically viable when a scheduler/runner is desired; the rejection is a product-boundary decision, not a capability limitation. It remains valid for optional managed jobs, external-orchestrator composition and TUI history enrichment.
 
 ### Transcript parsing
 
@@ -443,3 +447,6 @@ The installed Windows application observed during this documentation pass is `Op
 - [OpenAI Docs - Codex SDK](https://learn.chatgpt.com/docs/codex-sdk)
 - [OpenAI Docs - Configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference)
 - [OpenAI Docs - Managed configuration](https://learn.chatgpt.com/docs/enterprise/managed-configuration)
+- [OpenAI - Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/)
+- [OpenAI - An open-source spec for Codex orchestration: Symphony](https://openai.com/index/open-source-codex-orchestration-symphony/)
+- [OpenAI Symphony specification](https://github.com/openai/symphony/blob/main/SPEC.md)
