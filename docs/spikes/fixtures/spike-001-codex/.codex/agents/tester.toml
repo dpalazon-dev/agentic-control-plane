@@ -1,0 +1,6 @@
+name = "tester"
+description = "Read-only testing role for the disposable AWCP Codex integration spike."
+sandbox_mode = "read-only"
+developer_instructions = """
+Inspect the delegated result as a tester. Do not edit files. Return the checks selected, result and remaining uncertainty.
+"""

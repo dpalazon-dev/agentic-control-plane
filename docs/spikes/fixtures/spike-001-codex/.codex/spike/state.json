@@ -1,0 +1,7 @@
+{
+  "inject_session_context": false,
+  "inject_prompt_context": false,
+  "block_prompt": false,
+  "block_all_tools": false,
+  "block_stop_once": false
+}

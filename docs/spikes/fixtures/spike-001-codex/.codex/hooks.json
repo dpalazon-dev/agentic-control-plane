@@ -1,0 +1,99 @@
+{
+  "description": "Disposable SPIKE-001 lifecycle evidence fixture.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -File .codex\\hooks\\spike-hook.ps1",
+            "command": "pwsh -NoProfile -File .codex/hooks/spike-hook.ps1"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -File .codex\\hooks\\spike-hook.ps1",
+            "command": "pwsh -NoProfile -File .codex/hooks/spike-hook.ps1"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -File .codex\\hooks\\spike-hook.ps1",
+            "command": "pwsh -NoProfile -File .codex/hooks/spike-hook.ps1"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -File .codex\\hooks\\spike-hook.ps1",
+            "command": "pwsh -NoProfile -File .codex/hooks/spike-hook.ps1"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -File .codex\\hooks\\spike-hook.ps1",
+            "command": "pwsh -NoProfile -File .codex/hooks/spike-hook.ps1"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -File .codex\\hooks\\spike-hook.ps1",
+            "command": "pwsh -NoProfile -File .codex/hooks/spike-hook.ps1"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -File .codex\\hooks\\spike-hook.ps1",
+            "command": "pwsh -NoProfile -File .codex/hooks/spike-hook.ps1"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3,
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -File .codex\\hooks\\spike-hook.ps1",
+            "command": "pwsh -NoProfile -File .codex/hooks/spike-hook.ps1"
+          }
+        ]
+      }
+    ]
+  }
+}

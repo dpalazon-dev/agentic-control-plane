@@ -1,0 +1,6 @@
+.codex/spike/events.jsonl
+.codex/spike/app-server-schema/
+allowed-observed.txt
+blocked-by-hook.txt
+blocked-patch.txt
+child-write-probe.txt

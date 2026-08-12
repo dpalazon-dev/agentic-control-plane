@@ -669,9 +669,9 @@ A local database is required; its technology should not be selected until these 
 
 First instance: [`spikes/SPIKE-001-CODEX.md`](spikes/SPIKE-001-CODEX.md).
 
-This spike validates Codex only and is methodology-first rather than product-implementation-first. It asks whether strict and auditable role-driven work can be expressed through Codex-native surfaces such as `AGENTS.md`, skills, subagents, permissions, sandboxing, rules, hooks, MCP and configuration, and which of those surfaces can later connect Codex to the local AWCP service.
+This Codex-only, methodology-first spike is complete for architecture selection. It found that strict and auditable role-driven work can be connected to the later local AWCP service through trusted root lifecycle hooks, required MCP work-state operations, custom-agent spawn correlation and historical App Server reconciliation. The tested Codex build did not emit documented subagent lifecycle hooks, and a separate App Server process was not a reliable live-state source for a foreign active thread.
 
-Expected output: a Codex-specific capability/guarantee matrix and a proposed operating rule set for:
+Output: a Codex-specific capability/guarantee matrix, empirical evidence record and operating rule set for:
 
 ```text
 Intent

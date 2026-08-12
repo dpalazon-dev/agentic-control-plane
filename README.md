@@ -35,9 +35,10 @@ The Work Control Plane should also **reuse rather than reimplement** context man
 **Research and architecture validation.**  
 **No implementation exists.**
 
-Current active spike:
+Current Codex validation:
 
-- [`docs/spikes/SPIKE-001-CODEX.md`](docs/spikes/SPIKE-001-CODEX.md) - Codex-native methodology and integration surfaces for strict, auditable work execution without replacing Codex's runtime.
+- [`docs/spikes/SPIKE-001-CODEX.md`](docs/spikes/SPIKE-001-CODEX.md) - completed Codex-native methodology and integration contract, backed by a first Windows dry run.
+- [`docs/spikes/SPIKE-001-CODEX-EVIDENCE.md`](docs/spikes/SPIKE-001-CODEX-EVIDENCE.md) - runtime observations, native identifiers, limitations and revalidation rule.
 
 The project deliberately follows:
 

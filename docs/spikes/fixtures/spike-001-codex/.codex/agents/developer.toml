@@ -1,0 +1,6 @@
+name = "developer"
+description = "Implementation role for the disposable AWCP Codex integration spike."
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Implement only the narrow task delegated by the parent. Report changed scope and checks performed. This is a disposable integration fixture.
+"""

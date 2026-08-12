@@ -2,7 +2,9 @@
 
 ## Status
 
-**Official documentation review complete. Local empirical validation pending.**
+**Complete for Codex architecture selection. Official documentation and the first local empirical pass are complete.**
+
+The empirical pass ran on **2026-08-12** with `OpenAI.Codex 26.803.10989.0` and `codex-cli 0.147.0-alpha.6.6` on Windows. It used the committed disposable fixture under [`fixtures/spike-001-codex`](fixtures/spike-001-codex/README.md), not an AWCP product implementation. The reproducible observations and native identifiers are recorded in [`SPIKE-001-CODEX-EVIDENCE.md`](SPIKE-001-CODEX-EVIDENCE.md).
 
 This spike is limited to Codex. It validates the Codex integration contract before implementing the accepted local AWCP service, database or TUI. It does not implement an execution proxy, a custom agent runtime, a scheduler or an AWCP-owned model loop.
 
@@ -12,13 +14,14 @@ The question is:
 
 ## Decision summary
 
-**Yes, with a conditional guarantee.** Codex exposes enough native surfaces for a viable strict integration:
+**Yes, with a conditional and revised guarantee.** Codex exposes enough native surfaces for a viable strict integration:
 
-- lifecycle hooks can inject context and block prompts, supported local tools, subagent stops and normal turn stops;
+- lifecycle hooks can inject context and block prompts, supported shell, patch and MCP tools, and normal root-turn stops;
 - custom agents and subagents can materialize semantic roles with distinct instructions and permission defaults;
+- `PreToolUse` and `PostToolUse` around `spawn_agent` expose the requested `agent_type` and returned child thread ID for role binding;
 - MCP can expose the authoritative local AWCP work state to every supported local Codex client;
 - sandboxing, approvals and command rules can enforce technical boundaries;
-- App Server can list and read persisted Codex threads and their lineage for a secondary inspection UI;
+- App Server can list and read persisted Codex threads, turns and role lineage for historical TUI enrichment;
 - `codex exec --json` provides structured events for AWCP-managed non-interactive runs.
 
 The guarantee is not unconditional:
@@ -27,6 +30,8 @@ The guarantee is not unconditional:
 - `PreToolUse` does not cover hosted tools such as Web Search and some specialized tool paths may opt out;
 - Codex can be interrupted or closed by the human;
 - instructions, skills and agent descriptions cannot by themselves force role execution;
+- `SubagentStart` and `SubagentStop` are documented but did not fire in any tested CLI backend or mode;
+- a second App Server process did not report trustworthy live status for a thread owned by another process;
 - `SessionEnd` is advisory and is not a completion event.
 
 Therefore AWCP must distinguish two guarantees:
@@ -77,13 +82,13 @@ Disabling the Codex integration may permit ungoverned repository activity, but i
 | `AGENTS.md` | Codex builds a layered instruction chain from user and project files before work; deeper files override earlier guidance. | Short map to AWCP, project policy and deeper authoritative sources. Do not embed the complete methodology or work state. | `INJECTABLE`, `GUIDANCE_ONLY` |
 | Skills | Skills can be invoked explicitly or selected implicitly when their description matches. | Reusable intake and role playbooks. | `INJECTABLE`, `GUIDANCE_ONLY` |
 | Custom agents | Project or user agent profiles define a name, description and developer instructions and may set model, effort, sandbox, MCP and skills. | Named `developer`, `tester`, `code-reviewer`, `architect`, `critic` and `security-reviewer` executor profiles. | `INJECTABLE`; profile settings are enforceable only where the parent runtime permits them |
-| Subagents | Codex can spawn, wait for, continue and close subagent threads; activity is inspectable in supported clients. | Materialize role separation and collect role-specific evidence. | `OBSERVABLE`; spawning remains instruction-driven |
+| Subagents | Codex can spawn, wait for, continue and close custom-agent threads. Tool hooks expose the requested agent type and returned child ID, while App Server exposes persisted parent/role lineage. | Materialize role separation and collect role-specific evidence. | `OBSERVABLE` through spawn-tool correlation and historical App Server data; spawning remains instruction-driven |
 | Sandbox and approvals | Codex constrains filesystem, network and escalation behavior according to the active permission mode. Subagents inherit the parent session's live sandbox and permission mode. | Least privilege per session and role; read-only review where the effective mode supports it. | `ENFORCEABLE` at the technical boundary |
 | Command rules | Experimental `prefix_rule` entries allow, prompt or forbid matching commands outside the sandbox; the most restrictive match wins. | Block or approve sensitive shell entry points. | `ENFORCEABLE` for matching command boundaries; not a workflow engine |
-| Hooks | Codex runs deterministic commands at session, prompt, tool, compaction, subagent and stop lifecycle points. Several events can block or continue the flow. | Mandatory participation, context injection, execution attribution and evidence/completion gates. | `ENFORCEABLE_IF_TRUSTED`; `MANAGED_ENFORCEABLE` with requirements |
+| Hooks | Codex runs deterministic commands at session, prompt, tool and root-stop lifecycle points. The tested build did not emit the documented subagent lifecycle events. | Mandatory participation, context injection, execution attribution and root completion gates. | `ENFORCEABLE_IF_TRUSTED`; `MANAGED_ENFORCEABLE` with requirements, excluding unobserved subagent events |
 | MCP | Desktop, CLI and IDE clients on the same host share MCP configuration. A server may be local STDIO or HTTP, required at startup, tool-filtered and approval-configured. | Read and mutate authoritative AWCP work state through validated domain operations. | Availability is `ENFORCEABLE` with `required = true`; model invocation alone is not guaranteed |
 | Plugin | An installed plugin may package skills, MCP configuration and lifecycle hooks. Plugin hooks use the normal trust review unless managed. | Distribute the Codex-specific AWCP integration as one versioned unit. | Packaging only; contained surfaces retain their own guarantees |
-| App Server | JSON-RPC API can list/read stored threads, turns and items, expose thread status and lineage, and stream events for threads it controls or subscribes to. | TUI enrichment with Codex conversation metadata and optional managed-run integration. | `OBSERVABLE`; passive cross-process live streaming is not established |
+| App Server | JSON-RPC API can list/read stored threads, turns, items and descendant lineage. A separate process misreported a concurrently active foreign thread until it completed. | Historical TUI enrichment and optional managed-run integration. Live state must arrive through hooks or a process AWCP owns. | `OBSERVABLE` for persisted history; unsupported as a passive cross-process live source in the tested build |
 | `codex exec --json` | Emits JSONL events including thread, turn and item lifecycle and supports resuming a session by ID. | Deterministic ingestion for future AWCP-originated automation. | `OBSERVABLE`; only for runs launched this way |
 | Codex SDK | Starts and resumes local Codex threads programmatically. | Optional future execution mode for AWCP-originated jobs. | Strong control, but using it as the default would move AWCP toward owning execution |
 | Config profiles and requirements | Profiles select reusable runtime settings; `requirements.toml` can constrain security-sensitive settings and managed hooks. | Installation modes and host policy, not semantic work state. | `ENFORCEABLE` for supported settings |
@@ -94,22 +99,22 @@ Disabling the Codex integration may permit ungoverned repository activity, but i
 
 The earlier hypothesis treated hooks as optional checks. The official Codex contract is substantially stronger.
 
-| Hook | Stable data relevant to AWCP | AWCP responsibility |
+| Hook | Intended AWCP use | Empirical result in the tested build |
 | --- | --- | --- |
-| `SessionStart` | `session_id`, `cwd`, `model`, source (`startup`, `resume`, `clear`, `compact`) | Register or refresh the Codex session and inject the active work contract. |
-| `UserPromptSubmit` | `session_id`, `turn_id`, prompt, permission mode | Resolve the active task, inject task context or block a prompt that cannot enter the governed flow. |
-| `PreToolUse` | session, turn, tool name, tool-use ID and tool input | Reject supported mutations unless the task and active role permit them. |
-| `PostToolUse` | the same identity plus tool output | Record best-effort execution observations and attach candidate evidence. It cannot undo side effects. |
-| `PermissionRequest` | pending approval request and tool identity | Apply deterministic approval policy or defer to the normal human prompt. |
-| `SubagentStart` | parent session, turn, `agent_id`, `agent_type`, permission mode | Bind a concrete Codex subagent to a required AWCP role and inject its role contract. |
-| `SubagentStop` | parent session, turn, `agent_id`, `agent_type`, last message | Refuse a normal role stop and continue the subagent until required role evidence exists. |
-| `Stop` | session, turn and last assistant message | Refuse a normal turn stop and continue Codex when completion gates are missing. |
-| `SessionEnd` | session, cwd and current reason | Record a lifecycle observation only. Never infer work completion from it. |
+| `SessionStart` | Register or refresh the Codex session and inject the active work contract. | `PASS`: emitted and injected deterministic context. |
+| `UserPromptSubmit` | Resolve the active task, inject task context or block an ungoverned prompt. | `PASS`: injection reached the model; blocking produced a zero-token turn lifecycle. |
+| `PreToolUse` | Reject supported mutations unless the task and active role permit them. | `PASS`: denied shell, `apply_patch` and MCP calls before side effects; also observed `spawn_agent`. |
+| `PostToolUse` | Record execution observations and returned child IDs. It cannot undo side effects. | `PASS`: correlated allowed shell and `spawn_agent` calls using the same tool-use ID. |
+| `PermissionRequest` | Apply deterministic approval policy or defer to the normal human prompt. | `NOT TESTED`: remains a documented candidate surface. |
+| `SubagentStart` | Directly bind a child executor and inject its role contract. | `UNAVAILABLE IN TESTED BUILD`: registered but never emitted in exec, interactive CLI, v1 or `multi_agent_v2`. |
+| `SubagentStop` | Directly gate a child role before it stops. | `UNAVAILABLE IN TESTED BUILD`: registered but never emitted in the same modes. |
+| `Stop` | Continue the root turn when completion gates are missing. | `PASS`: one continuation occurred in the same turn; `stop_hook_active` prevented a loop. |
+| `SessionEnd` | Record a lifecycle observation only. | `PASS` with a three-second timeout on Windows; reason was `other`. Never infer completion from it. |
 
 Important limitations:
 
-- subagent hooks report the parent `session_id`; `agent_id` is required to distinguish executors;
-- `Stop` and `SubagentStop` do not reject a completed turn as a transaction would; a block asks Codex to continue with a new focused prompt;
+- documented subagent hook payloads cannot be an AWCP dependency until each supported Codex release emits them in acceptance tests;
+- `Stop` does not reject a completed turn as a transaction would; a block asks Codex to continue with a focused prompt;
 - `SessionEnd` may occur on normal close or after 30 minutes with no subscribers and is always advisory;
 - transcript paths are convenient but the transcript format is explicitly unstable and must not become the integration contract;
 - tool hooks cover shell/unified exec, `apply_patch`, MCP tools and most local function tools, but not every possible tool path.
@@ -120,16 +125,16 @@ AWCP should record native identifiers, not infer them from text or filesystem pa
 
 | AWCP concept | Codex identifier | Notes |
 | --- | --- | --- |
-| Coding client | integration source + observed App Server `sourceKind` when available | Examples include `cli`, `vscode`, `exec`, `appServer` and subagent source kinds. |
-| Session tree | hook `session_id` or App Server `thread.sessionId` | Root threads use their own thread ID; forks retain the root session ID. Read it, do not derive it. |
-| Thread | App Server `thread.id` | Distinguishes a root, fork or spawned descendant. |
+| Coding client | integration source + observed App Server `sourceKind` when available | The pass observed `cli`, `exec` and `subAgent` source kinds. |
+| Session | hook `session_id` or App Server `thread.sessionId` | A spawned child used its own session ID in the tested build. Do not infer ancestry from session equality. |
+| Thread tree | App Server `thread.id` + `parentThreadId` | `parentThreadId` is the supported persisted relationship between root and descendant. |
 | Turn | hook `turn_id` or App Server turn ID | Unit of user-to-agent work. |
-| Executor | root-thread marker or hook `agent_id` | Subagents require `agent_id`; the parent session ID is shared. |
-| Executor profile | hook `agent_type` | Candidate mapping to an AWCP semantic role, subject to policy validation. |
+| Executor | root-thread marker or child ID returned by `spawn_agent` | Bind the returned child ID from `PostToolUse`; reconcile it with App Server `thread.id`. |
+| Executor profile | requested `agent_type` + App Server `agentRole` | Validate the requested type before spawn, then reconcile the persisted role after completion. |
 | Tool execution | hook tool-use ID / App Server item ID | Useful correlation, not itself semantic evidence. |
 | Work execution | AWCP-owned execution-attempt ID | Authoritative link among task, role, Codex identities and timestamps. |
 
-The TUI may use App Server `thread/list`, `thread/read` and experimental turn/item pagination to enrich history without parsing rollout JSONL directly. Documentation confirms that stored interactive `cli` and `vscode` threads can be listed and filtered, including spawned descendants. Whether a second App Server process can provide sufficiently fresh, contention-free observation of an actively open desktop task remains an empirical question.
+The TUI may use App Server `thread/list`, `thread/read` and experimental turn/item pagination to enrich history without parsing rollout JSONL directly. The empirical pass recovered completed CLI, exec and subagent history, including `parentThreadId`, `agentRole` and child activity. During a separate process's active shell call, however, App Server reported the root as `notLoaded` and its turn as `interrupted`; it became complete only after the owner process finished. Hooks must therefore publish live lifecycle identity into AWCP, while App Server performs later reconciliation and history enrichment.
 
 OpenAI Symphony provides a first-party operational precedent for the other App Server use case: a long-running orchestrator can create and observe Codex sessions programmatically, maintain per-task workspaces and reconcile retries. This confirms the technical viability of **managed execution**; it does not establish passive observation of an interactive desktop task owned by another process.
 
@@ -245,15 +250,16 @@ Custom-agent permission defaults do not override the live parent session uncondi
 
 For a subagent:
 
-1. `SubagentStart` binds `agent_id` and `agent_type` to one open role assignment.
-2. The hook injects only that role's contract, inputs, constraints and evidence schema.
-3. The role runs with the least effective permission level available from Codex.
-4. The subagent records findings and evidence through the AWCP MCP server.
-5. `SubagentStop` checks the authoritative role state and continues the subagent if its contract is incomplete.
+1. `PreToolUse` intercepts `spawn_agent`, validates the requested `agent_type` against one open role assignment and rejects an unauthorized role launch.
+2. The custom-agent profile supplies that role's stable instructions; the delegated message supplies the task-specific contract, constraints and evidence schema.
+3. `PostToolUse` binds the returned child thread ID to the pending role assignment.
+4. The role runs with the least effective permission level available from Codex and records findings through the AWCP MCP server.
+5. App Server later reconciles the child ID, `parentThreadId` and `agentRole` into the historical record.
+6. The root `Stop` hook refuses completion while any required role assignment or evidence gate remains unsatisfied.
 
-Codex deciding to spawn a subagent is still guidance-driven. The hard gate is that `Stop` cannot accept completion while a required role remains unsatisfied. A human may explicitly waive a role only through an authorized AWCP transition that records the reason and degradation.
+Codex deciding to spawn a subagent is still guidance-driven, and the tested build offers no direct child-stop gate. The hard gate is that the root `Stop` cannot accept completion while a required role remains unsatisfied. A human may explicitly waive a role only through an authorized AWCP transition that records the reason and degradation.
 
-Both `SubagentStop` and `Stop` expose `stop_hook_active`. AWCP must use it to prevent blind continuation loops: after one automated continuation, the next failed gate should request a concrete repair or human decision and leave the work blocked if neither is possible.
+`Stop` exposes `stop_hook_active`. AWCP must use it to prevent blind continuation loops: after one automated continuation, the next failed gate should request a concrete repair or human decision and leave the work blocked if neither is possible.
 
 ### 4. Role execution controls
 
@@ -338,8 +344,8 @@ A user interruption, process failure or session close records an interrupted or 
 - prompts can be blocked or enriched before the model receives them;
 - supported local mutations can be denied before execution;
 - supported tool calls can be attributed to session and turn;
-- subagent start/stop can be attributed to agent ID and type;
-- Codex cannot end a normal role or main turn cleanly while the corresponding AWCP gate says to continue.
+- a requested custom-agent type can be validated before spawn and its returned child ID can be bound afterward;
+- Codex cannot end a normal root turn cleanly while the corresponding AWCP gate says to continue.
 
 ### Not guaranteed by Codex native surfaces
 
@@ -347,6 +353,7 @@ A user interruption, process failure or session close records an interrupted or 
 - coverage of hosted tools or every specialized local tool path;
 - automatic selection of the correct work item from arbitrary prose without confirmation;
 - deterministic subagent spawning from instructions alone;
+- direct enforcement of a subagent's own stop in the tested runtime;
 - semantic independence merely because two role labels differ;
 - completion when the human force-closes or interrupts Codex;
 - a stable contract based on transcript-file parsing;
@@ -374,62 +381,39 @@ Rejected because Codex explicitly marks transcript format as unstable. Native ho
 
 Rejected because they do not provide authoritative cross-session task, role, execution, timing and completion state required by AWCP-DEC-009.
 
-## Empirical validation plan
+## Empirical validation results
 
-Documentation establishes the candidate contract. The next step is a non-production dry run with disposable tasks and a minimal fake AWCP endpoint or fixture, not the product implementation.
+The pass exercised a disposable Git repository with a deterministic hook fixture. Raw transcripts are intentionally not an integration artifact because Codex documents their format as unstable. The evidence record retains native thread IDs and observable outcomes.
 
-### Test A - hook enforcement
+| Test | Result | Architectural consequence |
+| --- | --- | --- |
+| Session and prompt context injection | `PASS` | Hooks can attach the active work contract before model execution. |
+| Prompt block | `PASS` | The turn lifecycle existed, but model usage remained zero. Intake can be rejected before inference. |
+| Shell, `apply_patch` and MCP denial | `PASS` | `PreToolUse` stopped each tested side effect. The shell path used Codex's canonical `Bash` hook name on Windows. |
+| Allowed tool correlation | `PASS` | `PreToolUse` and `PostToolUse` shared session, turn and tool-use IDs. |
+| Custom `tester` role spawn | `PASS` | The requested `agent_type` and returned child ID are sufficient for initial executor binding. |
+| `SubagentStart` / `SubagentStop` | `UNAVAILABLE` | Neither hook fired in exec, interactive CLI, v1 or `multi_agent_v2`; they cannot be part of the current guarantee. |
+| Child permission inheritance | `PASS` | A child declaring `workspace-write` could not exceed a read-only parent. Permission-sensitive roles may need separate sessions. |
+| Root `Stop` continuation | `PASS` | One continuation stayed in the same turn; `stop_hook_active` supplied loop protection. |
+| Historical App Server inspection | `PASS` | Completed roots and descendants exposed turns, `parentThreadId`, `agentRole` and source kind. |
+| Passive live App Server inspection | `FAIL` | A foreign active thread appeared `notLoaded` / `interrupted`; hooks must supply live events. |
+| Untrusted project hooks | `PASS` as degraded behavior | Codex continued without running them. AWCP must show the run as ungoverned or degraded. |
+| Required MCP unavailable | `PASS` as hard precondition | Codex exited before creating a thread. |
+| `SessionEnd` on Windows | `PASS` with caveat | A three-second hook timeout was required in the fixture; the event remains advisory. |
 
-- verify `UserPromptSubmit` can inject and block;
-- verify `PreToolUse` blocks shell, unified exec, `apply_patch` and MCP calls before side effects;
-- verify expected behavior for tool paths not covered by hooks;
-- verify hook trust, changed-hook review and disabled-hook behavior;
-- verify Windows command invocation and timeout behavior.
+Not yet tested: `PermissionRequest`, administratively managed requirements/hooks, a real AWCP MCP service, Desktop-specific source behavior, unified exec as a distinct case, and regression behavior after a Codex upgrade.
 
-### Test B - role lifecycle
+## Exit decision
 
-- configure `developer`, `tester` and `code-reviewer` custom agents;
-- verify actual `SubagentStart` and `SubagentStop` payloads;
-- verify parent session ID, agent ID, type and turn correlation;
-- verify a blocked `SubagentStop` produces one focused continuation and does not loop indefinitely;
-- verify effective sandbox inheritance for each role.
+SPIKE-001 is closed for the **Codex integration architecture**. The selected contract is:
 
-### Test C - completion gate
+1. hooks publish live root lifecycle and enforce prompt, supported-tool and root-completion gates;
+2. the required AWCP MCP server performs authoritative work-state operations;
+3. custom agents materialize roles, with `spawn_agent` tool correlation binding child executors;
+4. App Server reconciles persisted history and role lineage after or around execution, but is not the passive live event source;
+5. AWCP's service and database alone decide whether work is complete.
 
-- run an implementation task requiring Developer + Tester + Code Reviewer;
-- attempt to stop before test evidence and before review evidence;
-- verify `Stop` continuation behavior and human interruption behavior;
-- verify that only the authoritative service can produce completion.
-
-### Test D - TUI observation substrate
-
-- start Codex work in the desktop app and CLI;
-- query a separate App Server with `thread/list` and `thread/read`;
-- measure freshness, locking, source kind, lineage and active status;
-- determine whether polling supported APIs is sufficient or hooks must publish all live identity into AWCP;
-- do not parse raw rollout JSONL.
-
-### Test E - degraded operation
-
-- stop the AWCP service;
-- fail required MCP initialization;
-- disable or modify an untrusted hook;
-- interrupt Codex during an active role;
-- verify that the task remains blocked, degraded, interrupted or stale, never complete.
-
-## Exit criteria
-
-SPIKE-001 can close only when the dry run records:
-
-- exact supported hook payloads on the installed Windows Codex version;
-- actual block/continue behavior for each selected gate;
-- reliable session, turn and agent correlation;
-- effective role permission behavior;
-- failure and recovery behavior when AWCP or MCP is unavailable;
-- App Server viability for secondary TUI inspection;
-- an updated guarantee matrix based on observed results.
-
-The installed Windows application observed during this documentation pass is `OpenAI.Codex 26.803.10989.0`. Direct CLI execution from the current automation environment was denied by Windows Apps permissions, so runtime claims remain pending until the dedicated dry run.
+Product implementation still requires acceptance tests for the untested items above and must rerun this fixture for every supported Codex release. A regression in any required native surface changes the run to degraded; it must not weaken the authoritative completion contract.
 
 ## Sources
 

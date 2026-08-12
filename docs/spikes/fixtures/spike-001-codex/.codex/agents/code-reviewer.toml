@@ -1,0 +1,6 @@
+name = "code_reviewer"
+description = "Read-only review role for the disposable AWCP Codex integration spike."
+sandbox_mode = "read-only"
+developer_instructions = """
+Review the delegated scope for correctness and missing validation. Do not edit files. Return findings or an explicit no-findings result and residual risk.
+"""

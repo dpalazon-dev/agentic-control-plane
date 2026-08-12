@@ -4,7 +4,7 @@
 
 This log intentionally contains only a small set of accepted conceptual boundaries.
 
-`AWCP-DEC-001` through `AWCP-DEC-009` are currently accepted. Everything listed under **Open questions and undecided choices** remains `OPEN`.
+`AWCP-DEC-001` through `AWCP-DEC-010` are currently accepted. Everything listed under **Open questions and undecided choices** remains `OPEN`.
 
 Decision status vocabulary:
 
@@ -252,6 +252,32 @@ The existence of a local work-control database and TUI is decided. Their impleme
 
 ---
 
+## AWCP-DEC-010 — Codex governance combines trusted root hooks, required MCP and persisted lineage
+
+**Status:** ACCEPTED
+
+### Decision
+
+The initial Codex integration contract uses native Codex surfaces without taking ownership of Codex execution:
+
+- trusted lifecycle hooks publish live root-session and turn identity, inject work context, guard supported local tools and gate normal root completion;
+- the local AWCP MCP server is required at startup and exposes validated operations over the authoritative work-control state;
+- custom agents materialize semantic roles;
+- `PreToolUse` and `PostToolUse` around `spawn_agent` validate the requested role and bind the returned child thread ID;
+- App Server reads reconcile persisted thread, turn, `parentThreadId` and `agentRole` history for the TUI.
+
+The integration must not depend on `SubagentStart` or `SubagentStop` until those events are observed in every supported Codex release. It must not use a second App Server process as the passive live-state source for a thread owned by another Codex process.
+
+The AWCP service remains the only authority that may record work completion. The root `Stop` gate prevents normal completion while required roles or evidence remain unsatisfied; it does not claim transactional control over a child agent or a force-closed client.
+
+### Consequence
+
+Codex-path enforcement is conditional on the exact required hooks being active and trusted. A missing or changed hook, unavailable required MCP server, unsupported tool path or interrupted client marks the execution degraded, blocked, interrupted or stale; none of those states may be represented as complete.
+
+Every supported Codex release must rerun the SPIKE-001 fixture. Runtime observations override undocumented assumptions and documented-but-unobserved surfaces when AWCP assigns a guarantee level.
+
+---
+
 # Open questions and undecided choices
 
 Everything below remains **OPEN**.
@@ -330,7 +356,9 @@ Everything below remains **OPEN**.
 
 ## Coding-client integration
 
-- `OPEN` — mechanism per client;
+The initial Codex mechanism is accepted in `AWCP-DEC-010`. The following choices remain open for other clients, portability and implementation detail:
+
+- `OPEN` — mechanism for non-Codex clients;
 - `OPEN` — common semantic adapter contract;
 - `OPEN` — role materialization mechanism per client;
 - `OPEN` — MCP;
