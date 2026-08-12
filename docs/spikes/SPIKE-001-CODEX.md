@@ -2,137 +2,227 @@
 
 ## Status
 
-**Started.**
+**Official documentation review complete. Local empirical validation pending.**
 
-This spike is limited to **Codex**. It validates the methodology and Codex-side integration contract before implementing the accepted local AWCP service, database or TUI. It does not design an execution proxy, a custom runtime, an adapter daemon, a scheduler or an AWCP-owned agent loop.
+This spike is limited to Codex. It validates the Codex integration contract before implementing the accepted local AWCP service, database or TUI. It does not implement an execution proxy, a custom agent runtime, a scheduler or an AWCP-owned model loop.
 
 The question is:
 
-> Can Codex's native surfaces support a strict, auditable operating methodology for `Intent -> Work Package / Task -> Required Roles -> Role Execution -> Evidence -> Completion`?
+> Can Codex participate in a strict, auditable flow for `Intent -> Work Package / Task -> Required Roles -> Role Execution -> Evidence -> Completion` while Codex keeps ownership of its conversation, agent loop and tools?
+
+## Decision summary
+
+**Yes, with a conditional guarantee.** Codex exposes enough native surfaces for a viable strict integration:
+
+- lifecycle hooks can inject context and block prompts, supported local tools, subagent stops and normal turn stops;
+- custom agents and subagents can materialize semantic roles with distinct instructions and permission defaults;
+- MCP can expose the authoritative local AWCP work state to every supported local Codex client;
+- sandboxing, approvals and command rules can enforce technical boundaries;
+- App Server can list and read persisted Codex threads and their lineage for a secondary inspection UI;
+- `codex exec --json` provides structured events for AWCP-managed non-interactive runs.
+
+The guarantee is not unconditional:
+
+- ordinary project, user and plugin hooks must be reviewed and trusted and can be disabled;
+- `PreToolUse` does not cover hosted tools such as Web Search and some specialized tool paths may opt out;
+- Codex can be interrupted or closed by the human;
+- instructions, skills and agent descriptions cannot by themselves force role execution;
+- `SessionEnd` is advisory and is not a completion event.
+
+Therefore AWCP must distinguish two guarantees:
+
+1. **Work-state integrity:** the AWCP service rejects invalid transitions and never records completion without the required role evidence or an explicit authorized waiver. This can be guaranteed by AWCP itself.
+2. **Codex-path enforcement:** Codex is prevented from progressing normally when the work contract is unsatisfied. This is guaranteed only while the required hooks are active and trusted, or when they are installed as managed hooks.
+
+Disabling the Codex integration may permit ungoverned repository activity, but it must never manufacture a valid AWCP completion record.
 
 ## Scope
 
 ### In scope
 
-- Codex instructions and `AGENTS.md`;
-- Codex skills;
-- Codex subagents;
-- Codex permissions, sandboxing and approvals;
-- Codex rules;
-- Codex hooks;
-- MCP configuration;
-- Codex configuration profiles;
-- Codex-visible evidence and completion discipline;
-- native signals available for work, agent and session attribution;
-- candidate mechanisms for reading work from and writing evidence to a future local AWCP service.
+- `AGENTS.md` and project instructions;
+- skills and plugins;
+- custom agents and subagents;
+- hooks and their trust model;
+- MCP configuration and tool policy;
+- sandboxing, approvals, permission modes and command rules;
+- App Server, Codex SDK and non-interactive mode as observation or execution surfaces;
+- stable identifiers for client, session, turn, agent and execution attribution;
+- a strict Codex-to-AWCP operating contract.
 
 ### Out of scope
 
-- local AWCP service implementation;
-- database or persistence implementation;
-- custom execution middleware or proxy;
-- custom agent orchestration runtime;
-- custom scheduler;
-- custom event bus;
-- custom permission layer;
-- custom context or memory system;
-- custom observability platform;
-- product UI or TUI.
+- implementation of the local service, database, TUI, MCP server or hooks;
+- database and API technology selection;
+- replacing the Codex desktop app, CLI or IDE extension;
+- implementing a custom model loop or multi-agent scheduler;
+- multi-client portability beyond Codex.
 
-## Native surfaces reviewed
+## Guarantee vocabulary
 
-| Surface | Native Codex support | AWCP use | Guarantee level |
+| Guarantee | Meaning |
+| --- | --- |
+| `ENFORCEABLE` | The relevant runtime or authoritative service can reject the operation. |
+| `ENFORCEABLE_IF_TRUSTED` | Codex can reject the operation while non-managed hooks are enabled and trusted. |
+| `MANAGED_ENFORCEABLE` | Administratively managed Codex requirements can prevent the user from disabling the control. |
+| `OBSERVABLE` | A supported interface exposes the event or identifier. |
+| `INJECTABLE` | Codex can receive the requirement as model context. |
+| `GUIDANCE_ONLY` | Codex can be instructed, but the instruction is not a technical boundary. |
+| `UNSUPPORTED` | No supported native surface was found. |
+
+## Native capability matrix
+
+| Surface | Verified Codex behavior | AWCP use | Honest guarantee |
 | --- | --- | --- | --- |
-| `AGENTS.md` | Codex loads layered project guidance before work. | Encode project-wide methodology, required artifacts, role rules, evidence rules and done criteria. | `INJECTABLE` / `GUIDANCE_ONLY` |
-| Skills | Skills package instructions, resources and optional scripts; Codex can invoke them explicitly or by matching descriptions. | Encode reusable role playbooks such as Developer, Tester, Reviewer, Architect or Work Intake. Prefer instruction-only skills unless deterministic scripts are already justified. | `INJECTABLE` / `GUIDANCE_ONLY` |
-| Subagents | Codex can delegate independent parts of work to subagents in app, CLI and IDE contexts. | Materialize role separation when a task requires distinct Developer, Tester, Reviewer, Architect or Senior Engineer responsibilities. | `OBSERVABLE` / `GUIDANCE_ONLY`; possibly stronger when the UI exposes distinct subagent threads |
-| Sandbox and approvals | Codex combines sandbox mode with approval policy; defaults include no network access and workspace-limited writes in local clients. | Select conservative execution boundaries per role: Developer may write; Reviewer should normally inspect; high-risk operations require approval. | `ENFORCEABLE` at sandbox boundary; `GUIDANCE_ONLY` for semantic role intent |
-| Rules | Rules control which commands Codex can run outside the sandbox; currently experimental. | Define deterministic command policy for unsafe or privileged commands where available. | `ENFORCEABLE` for supported command boundaries; experimental |
-| Hooks | Hooks run deterministic scripts during the Codex lifecycle. | Candidate for lightweight pre-flight or post-action checks if future evidence shows need; do not use to create AWCP middleware. | `OBSERVABLE` / potentially `ENFORCEABLE` for local deterministic checks |
-| MCP | Codex can connect to local or remote MCP servers and configure tool allow/deny lists and approval behavior. | Consume existing tools and potentially expose the local AWCP service to Codex. MCP may be an adapter surface; it is not the authoritative work-control state itself. | `INJECTABLE`; tool policy can be partly `ENFORCEABLE` |
-| Config profiles | Codex config exposes settings such as sandbox, approval policy and MCP server/tool policy. | Define recommended local profiles for role-safe operation, without owning a runtime. | `ENFORCEABLE` where Codex config controls the host behavior |
-| Record & Replay | Codex can turn demonstrated workflows into reusable skills where the feature is available; current docs describe a desktop recording flow. | Possible way to capture a team methodology as a skill after the manual process stabilizes. | `INJECTABLE` / `GUIDANCE_ONLY` |
+| `AGENTS.md` | Codex builds a layered instruction chain from user and project files before work; deeper files override earlier guidance. | Baseline methodology, project conventions and the requirement to use AWCP. | `INJECTABLE`, `GUIDANCE_ONLY` |
+| Skills | Skills can be invoked explicitly or selected implicitly when their description matches. | Reusable intake and role playbooks. | `INJECTABLE`, `GUIDANCE_ONLY` |
+| Custom agents | Project or user agent profiles define a name, description and developer instructions and may set model, effort, sandbox, MCP and skills. | Named `developer`, `tester`, `code-reviewer`, `architect`, `critic` and `security-reviewer` executor profiles. | `INJECTABLE`; profile settings are enforceable only where the parent runtime permits them |
+| Subagents | Codex can spawn, wait for, continue and close subagent threads; activity is inspectable in supported clients. | Materialize role separation and collect role-specific evidence. | `OBSERVABLE`; spawning remains instruction-driven |
+| Sandbox and approvals | Codex constrains filesystem, network and escalation behavior according to the active permission mode. Subagents inherit the parent session's live sandbox and permission mode. | Least privilege per session and role; read-only review where the effective mode supports it. | `ENFORCEABLE` at the technical boundary |
+| Command rules | Experimental `prefix_rule` entries allow, prompt or forbid matching commands outside the sandbox; the most restrictive match wins. | Block or approve sensitive shell entry points. | `ENFORCEABLE` for matching command boundaries; not a workflow engine |
+| Hooks | Codex runs deterministic commands at session, prompt, tool, compaction, subagent and stop lifecycle points. Several events can block or continue the flow. | Mandatory participation, context injection, execution attribution and evidence/completion gates. | `ENFORCEABLE_IF_TRUSTED`; `MANAGED_ENFORCEABLE` with requirements |
+| MCP | Desktop, CLI and IDE clients on the same host share MCP configuration. A server may be local STDIO or HTTP, required at startup, tool-filtered and approval-configured. | Read and mutate authoritative AWCP work state through validated domain operations. | Availability is `ENFORCEABLE` with `required = true`; model invocation alone is not guaranteed |
+| Plugin | An installed plugin may package skills, MCP configuration and lifecycle hooks. Plugin hooks use the normal trust review unless managed. | Distribute the Codex-specific AWCP integration as one versioned unit. | Packaging only; contained surfaces retain their own guarantees |
+| App Server | JSON-RPC API can list/read stored threads, turns and items, expose thread status and lineage, and stream events for threads it controls or subscribes to. | TUI enrichment with Codex conversation metadata and optional managed-run integration. | `OBSERVABLE`; passive cross-process live streaming is not established |
+| `codex exec --json` | Emits JSONL events including thread, turn and item lifecycle and supports resuming a session by ID. | Deterministic ingestion for future AWCP-originated automation. | `OBSERVABLE`; only for runs launched this way |
+| Codex SDK | Starts and resumes local Codex threads programmatically. | Optional future execution mode for AWCP-originated jobs. | Strong control, but using it as the default would move AWCP toward owning execution |
+| Config profiles and requirements | Profiles select reusable runtime settings; `requirements.toml` can constrain security-sensitive settings and managed hooks. | Installation modes and host policy, not semantic work state. | `ENFORCEABLE` for supported settings |
+| Record & Replay | Converts a demonstrated workflow into a reusable skill. | Capture a mature role playbook after the method stabilizes. | Same as skills: `INJECTABLE`, `GUIDANCE_ONLY` |
+| Native goal and plan state | App Server exposes the persisted goal also shown by `/goal`; plans appear as turn items. | Optional projection of the active objective and current execution plan. | `OBSERVABLE`; insufficient for AWCP work hierarchy, role evidence or completion |
 
-## Key finding
+## Hooks are the decisive surface
 
-Codex has enough native surfaces to express and partially enforce a strict operating methodology, but the guarantee must be stated honestly.
+The earlier hypothesis treated hooks as optional checks. The official Codex contract is substantially stronger.
 
-AWCP-style methodology can be:
+| Hook | Stable data relevant to AWCP | AWCP responsibility |
+| --- | --- | --- |
+| `SessionStart` | `session_id`, `cwd`, `model`, source (`startup`, `resume`, `clear`, `compact`) | Register or refresh the Codex session and inject the active work contract. |
+| `UserPromptSubmit` | `session_id`, `turn_id`, prompt, permission mode | Resolve the active task, inject task context or block a prompt that cannot enter the governed flow. |
+| `PreToolUse` | session, turn, tool name, tool-use ID and tool input | Reject supported mutations unless the task and active role permit them. |
+| `PostToolUse` | the same identity plus tool output | Record best-effort execution observations and attach candidate evidence. It cannot undo side effects. |
+| `PermissionRequest` | pending approval request and tool identity | Apply deterministic approval policy or defer to the normal human prompt. |
+| `SubagentStart` | parent session, turn, `agent_id`, `agent_type`, permission mode | Bind a concrete Codex subagent to a required AWCP role and inject its role contract. |
+| `SubagentStop` | parent session, turn, `agent_id`, `agent_type`, last message | Refuse a normal role stop and continue the subagent until required role evidence exists. |
+| `Stop` | session, turn and last assistant message | Refuse a normal turn stop and continue Codex when completion gates are missing. |
+| `SessionEnd` | session, cwd and current reason | Record a lifecycle observation only. Never infer work completion from it. |
 
-- **injected** through `AGENTS.md`, skills, prompts and MCP instructions;
-- **materialized** through subagents or separate Codex sessions;
-- **constrained** at the technical boundary through sandboxing, approvals, rules and MCP tool policies;
-- **observed** through Codex task/subagent threads, diffs, command output, test output and final summaries;
-- **audited** through repository artifacts, commits, PRs and recorded evidence.
+Important limitations:
 
-It cannot be truthfully described as fully deterministic role orchestration unless a native Codex surface actually enforces that property. A prompt saying "Reviewer must be independent" is a rule of methodology; a separate subagent/session plus review-only permissions is stronger evidence, but still not the same as a custom scheduler.
+- subagent hooks report the parent `session_id`; `agent_id` is required to distinguish executors;
+- `Stop` and `SubagentStop` do not reject a completed turn as a transaction would; a block asks Codex to continue with a new focused prompt;
+- `SessionEnd` may occur on normal close or after 30 minutes with no subscribers and is always advisory;
+- transcript paths are convenient but the transcript format is explicitly unstable and must not become the integration contract;
+- tool hooks cover shell/unified exec, `apply_patch`, MCP tools and most local function tools, but not every possible tool path.
 
-## Required future AWCP integration contract
+## Identity and provenance model
 
-The accepted product boundary adds a persistent local service and TUI outside Codex. SPIKE-001 must therefore determine how much of the following contract Codex can satisfy natively:
+AWCP should record native identifiers, not infer them from text or filesystem paths.
 
-1. identify or select the active AWCP task;
-2. read its intent, constraints, required role and completion contract;
-3. associate execution with the observable Codex client, agent/subagent and session identifiers;
-4. record start, progress, decisions, handoffs and completion timestamps;
-5. submit role-specific evidence and unresolved findings;
-6. request or record a work-state transition without allowing an unsupported completion claim;
-7. leave enough provenance for the TUI to answer who did what, when, in which session and why.
+| AWCP concept | Codex identifier | Notes |
+| --- | --- | --- |
+| Coding client | integration source + observed App Server `sourceKind` when available | Examples include `cli`, `vscode`, `exec`, `appServer` and subagent source kinds. |
+| Session tree | hook `session_id` or App Server `thread.sessionId` | Root threads use their own thread ID; forks retain the root session ID. Read it, do not derive it. |
+| Thread | App Server `thread.id` | Distinguishes a root, fork or spawned descendant. |
+| Turn | hook `turn_id` or App Server turn ID | Unit of user-to-agent work. |
+| Executor | root-thread marker or hook `agent_id` | Subagents require `agent_id`; the parent session ID is shared. |
+| Executor profile | hook `agent_type` | Candidate mapping to an AWCP semantic role, subject to policy validation. |
+| Tool execution | hook tool-use ID / App Server item ID | Useful correlation, not itself semantic evidence. |
+| Work execution | AWCP-owned execution-attempt ID | Authoritative link among task, role, Codex identities and timestamps. |
 
-The exact API or protocol is not selected. MCP, hooks, skills, instructions, local commands and Codex-produced artifacts must be compared by their actual guarantee level. Missing or unstable session identity must be recorded as unsupported or degraded rather than inferred.
+The TUI may use App Server `thread/list`, `thread/read` and experimental turn/item pagination to enrich history without parsing rollout JSONL directly. Documentation confirms that stored interactive `cli` and `vscode` threads can be listed and filtered, including spawned descendants. Whether a second App Server process can provide sufficiently fresh, contention-free observation of an actively open desktop task remains an empirical question.
 
-## Proposed Codex operating method
+## Recommended Codex integration shape
 
-### 1. Intent intake
+```text
+Codex desktop / CLI / IDE
+  |
+  | native hooks: deterministic gates and lifecycle identity
+  | native MCP: explicit work-state operations
+  | custom agents: role materialization
+  v
+Local AWCP service + authoritative database
+  ^
+  | App Server read APIs: optional Codex history enrichment
+  |
+AWCP TUI
+```
 
-Every non-trivial Codex task starts by producing or confirming an explicit intent.
+The recommended distribution unit is a Codex plugin containing:
 
-Required fields:
+- plugin-bundled lifecycle hooks;
+- an intake/methodology skill;
+- optional role-specific skills;
+- the registration for a local AWCP MCP server, or installation instructions for host configuration.
 
-- outcome;
-- non-goals;
-- affected repository area;
-- known constraints;
-- risk level: `low`, `medium`, `high`;
-- uncertainty level: `low`, `medium`, `high`.
+Custom agent profiles should initially be installed through Codex's documented user or project agent directories. The reviewed plugin documentation confirms packaging for skills, MCP and hooks, but does not establish plugin packaging as a supported custom-agent distribution contract.
 
-Audit evidence:
+`AGENTS.md` remains project policy, not the source of truth. The local service remains the source of truth, not MCP, hooks, the plugin or the TUI.
 
-- the user prompt, issue, PR, spec or short Markdown note that contains the intent;
-- unresolved questions or accepted assumptions.
+### Strict installation modes
 
-### 2. Work classification
+#### Personal strict mode
 
-Before editing, Codex classifies the work.
+- the user installs and enables the AWCP plugin;
+- the user reviews and trusts its exact hook definitions;
+- hooks remain enabled;
+- the AWCP MCP server is enabled with `required = true`;
+- the TUI reports integration health and refuses to present unattached work as governed.
 
-Initial classes:
+Guarantee: `ENFORCEABLE_IF_TRUSTED`.
 
-- `trivial-edit`;
-- `implementation`;
-- `bugfix`;
-- `refactor`;
-- `test-only`;
-- `documentation`;
-- `research`;
-- `architecture`;
-- `security-sensitive`.
+#### Managed strict mode
 
-Audit evidence:
+- administrators pin `[features].hooks = true` in `requirements.toml`;
+- hooks are defined as managed hooks and their scripts are installed through device management;
+- approved MCP server identities and restrictive command rules are also defined in requirements;
+- managed hooks cannot be disabled in the normal hook browser.
 
-- class selected;
+Guarantee: `MANAGED_ENFORCEABLE` for the supported hook and policy boundaries.
+
+## Strict operating protocol
+
+### 0. Preconditions
+
+A governed Codex run is healthy only when:
+
+- the AWCP service is reachable;
+- the required MCP server initialized;
+- required hooks are active and trusted;
+- the repository is associated with an AWCP project;
+- Codex exposes a native session identifier.
+
+If any precondition fails, AWCP records the integration as degraded and must not allow the affected work item to become complete.
+
+### 1. Intent and task resolution
+
+On `SessionStart`, the hook registers the Codex session and asks AWCP whether it already has an active execution for the current repository and session.
+
+On `UserPromptSubmit`:
+
+1. If a task is already bound, the hook injects its intent, constraints, active role and completion contract.
+2. If no task is bound, Codex enters intake mode and may inspect or plan.
+3. Before any mutation, Codex must use AWCP MCP operations to select an existing task or create/classify a new one.
+4. `PreToolUse` rejects supported mutating operations while no eligible task and role binding exists.
+
+This permits conversational intake without permitting unclassified implementation.
+
+### 2. Work classification and role derivation
+
+AWCP, not free-form chat text, persists:
+
+- work class;
 - risk and uncertainty;
-- reason for the selected class.
+- required roles;
+- independence constraints;
+- role-specific evidence requirements;
+- completion gates.
 
-### 3. Required role composition
-
-The work class derives mandatory roles.
-
-Initial policy:
+The initial policy remains:
 
 | Work class | Required roles |
 | --- | --- |
 | `trivial-edit` | Developer |
-| `documentation` | Developer or Writer; Reviewer when public or normative |
+| `documentation` | Writer or Developer; Reviewer when normative or public |
 | `research` | Researcher + Critic |
 | `architecture` | Architect + Senior Engineer |
 | `implementation` | Developer + Tester + Code Reviewer |
@@ -141,246 +231,215 @@ Initial policy:
 | `test-only` | Tester + Code Reviewer |
 | `security-sensitive` | Developer + Tester + Security Reviewer + Code Reviewer |
 
-Rules:
+This table is a spike policy, not an accepted final taxonomy.
 
-- A role is a responsibility slot, not a model or fixed prompt.
-- A role may be satisfied by the main Codex thread, a Codex subagent, a separate Codex session, a human or a deterministic tool only when its responsibility contract is met.
-- Required roles cannot be silently skipped. If Codex cannot materialize a role, it must record a degradation and ask for approval before completion.
+### 3. Executor binding
 
-### 4. Role contracts
+The main thread may satisfy the Developer or coordinating role. Required independent roles are delegated to distinct custom Codex agents or, when necessary, separate sessions.
 
-#### Developer
+Custom-agent permission defaults do not override the live parent session unconditionally: subagents inherit the parent's effective sandbox and permission mode. If a review role must be technically read-only and the effective parent mode cannot provide that boundary, AWCP must require a separate Codex session with the correct permissions or mark the independence guarantee as degraded.
 
-Responsibilities:
+For a subagent:
 
-- inspect the relevant code;
-- make the smallest change that satisfies the work contract;
-- avoid unrelated refactors;
-- preserve user changes;
-- produce implementation evidence.
+1. `SubagentStart` binds `agent_id` and `agent_type` to one open role assignment.
+2. The hook injects only that role's contract, inputs, constraints and evidence schema.
+3. The role runs with the least effective permission level available from Codex.
+4. The subagent records findings and evidence through the AWCP MCP server.
+5. `SubagentStop` checks the authoritative role state and continues the subagent if its contract is incomplete.
 
-Evidence:
+Codex deciding to spawn a subagent is still guidance-driven. The hard gate is that `Stop` cannot accept completion while a required role remains unsatisfied. A human may explicitly waive a role only through an authorized AWCP transition that records the reason and degradation.
 
-- changed files;
-- rationale for the change;
-- build/lint/test command results when applicable.
+Both `SubagentStop` and `Stop` expose `stop_hook_active`. AWCP must use it to prevent blind continuation loops: after one automated continuation, the next failed gate should request a concrete repair or human decision and leave the work blocked if neither is possible.
 
-#### Tester
+### 4. Role execution controls
 
-Responsibilities:
+`PreToolUse` applies the following checks to supported local tools:
 
-- validate behavior against intent and acceptance criteria;
-- prefer deterministic tests or reproducible checks;
-- identify untested risk.
+- a governed task is active;
+- an execution attempt is open;
+- the current executor is bound to the active role;
+- the role permits that tool category and mutation class;
+- prerequisite roles or approvals are satisfied;
+- the requested operation does not violate task constraints.
 
-Evidence:
+Examples:
 
-- tests added or selected;
-- commands run;
-- pass/fail result;
-- remaining test gaps.
+- a Reviewer bound as read-only cannot apply a patch;
+- a Developer cannot mutate before task classification;
+- completion-state mutation is rejected unless role evidence and gates are satisfied;
+- sensitive commands remain subject to Codex sandbox, approvals and command rules as an independent boundary.
 
-#### Code Reviewer
+`PostToolUse` may record command, patch and MCP observations, but tool output is not automatically accepted as role evidence. The role or a deterministic verifier must submit evidence under the corresponding evidence requirement.
 
-Responsibilities:
+### 5. Evidence protocol
 
-- review the diff independently from the implementation path when required;
-- look for correctness, regressions, missing tests, unsafe scope and maintainability risks;
-- state approval, findings or required repair.
+Each role contribution records:
 
-Evidence:
+- AWCP task, role-assignment and execution-attempt IDs;
+- Codex session, turn and executor identifiers;
+- start and end timestamps;
+- inputs or stable references to them;
+- decisions and rationale;
+- evidence type, result and stable artifact reference;
+- findings, disposition and unresolved risk;
+- guarantee level and any degradation.
 
-- reviewed files/diff scope;
-- findings or "no findings";
-- residual risks.
+Minimum role evidence:
 
-#### Architect
-
-Responsibilities:
-
-- structure the approach;
-- identify boundaries, tradeoffs and dependencies;
-- prevent premature implementation.
-
-Evidence:
-
-- decision summary;
-- rejected alternatives;
-- open questions.
-
-#### Senior Engineer
-
-Responsibilities:
-
-- challenge feasibility and operational impact;
-- verify that the plan fits the existing system and maintenance constraints.
-
-Evidence:
-
-- feasibility review;
-- risks and mitigations.
-
-#### Researcher
-
-Responsibilities:
-
-- gather source-backed evidence;
-- separate facts, inferences and hypotheses.
-
-Evidence:
-
-- sources used;
-- factual claims;
-- uncertainty.
-
-#### Critic
-
-Responsibilities:
-
-- challenge the research conclusion;
-- identify overclaims, missing sources and falsification paths.
-
-Evidence:
-
-- critique;
-- unresolved uncertainties.
-
-#### Security Reviewer
-
-Responsibilities:
-
-- inspect security-sensitive changes for threat, permission, secret, auth, data or sandbox impact.
-
-Evidence:
-
-- reviewed threat surface;
-- findings or approval;
-- required mitigations.
-
-### 5. Role execution using Codex
-
-Preferred order:
-
-1. Main Codex thread performs intake, classification and role plan.
-2. Main thread executes the Developer role only if implementation is required.
-3. Tester role is delegated to a Codex subagent or separate session when meaningful independence is required.
-4. Code Reviewer role is delegated to a distinct Codex subagent or separate session for implementation, bugfix and refactor work.
-5. Main thread consolidates evidence and either completes, repairs or escalates.
-
-Independence rule:
-
-- For `implementation`, `bugfix`, `refactor` and `security-sensitive`, the executor that performed the main implementation should not be the only executor satisfying final review.
-- If the host cannot provide a distinct subagent/session, the final response must mark review independence as degraded.
-
-### 6. Context and permissions
-
-Role-specific defaults:
-
-| Role | Context | Permissions |
-| --- | --- | --- |
-| Developer | intent, relevant code, constraints, existing tests | workspace write; command execution within sandbox |
-| Tester | intent, acceptance criteria, test/build docs, changed files | command execution; write only when adding tests is part of scope |
-| Code Reviewer | intent, diff, relevant architecture/policy | read/inspect by default; edits only after explicit repair delegation |
-| Architect | intent, repo structure, constraints, prior decisions | read/inspect |
-| Security Reviewer | intent, diff, auth/data/permission context | read/inspect; command execution for scanners when approved |
-
-Rules:
-
-- Context must be scoped to the role's responsibility.
-- Permissions must use Codex sandbox, approvals, rules and MCP tool policy where those controls exist.
-- Where Codex can only guide behavior, the methodology must label the guarantee as guidance.
-
-### 7. Evidence ledger
-
-Every role contribution should leave evidence in the conversation, PR, commit message or work artifact.
-
-Minimum evidence:
-
-- `Intent`: what was requested and accepted;
-- `Work`: classification, risk and role plan;
-- `Developer`: changed files and implementation rationale;
-- `Tester`: commands/checks and results;
-- `Reviewer`: findings or approval;
-- `Completion`: why the work is eligible to close.
-
-For repository work, the final Codex response should include:
-
-- files changed;
-- verification performed;
-- role evidence summary;
-- known gaps or degraded guarantees.
-
-### 8. Completion rule
-
-Work is not complete merely because code changed or Codex says it is done.
-
-Completion requires:
-
-- intent satisfied or explicitly narrowed;
-- required roles executed or degraded with human approval;
-- required evidence exists;
-- tests/checks run or skipped with reason;
-- review findings resolved or accepted;
-- no known blocker remains.
-
-## Recommended project-level `AGENTS.md` rules
-
-These are candidate rules for a future repository `AGENTS.md` or skill, not code:
-
-```md
-# Agentic Work Methodology
-
-For non-trivial work, follow this sequence before claiming completion:
-
-1. Restate the Intent, non-goals, constraints, risk and uncertainty.
-2. Classify the work.
-3. Derive required roles from the work class.
-4. State how each required role will be satisfied in Codex.
-5. Execute roles in order, using subagents or separate sessions where independence is required and available.
-6. Record evidence for each role.
-7. Do not mark work complete until required role evidence exists.
-
-If a required role cannot be executed independently, say so explicitly as a degraded guarantee.
-
-For implementation, bugfix and refactor work, default required roles are Developer, Tester and Code Reviewer.
-```
-
-## Proposed guarantee vocabulary for Codex
-
-| Guarantee | Meaning |
+| Role | Required evidence |
 | --- | --- |
-| `ENFORCEABLE` | Codex or the OS/tool boundary can technically prevent or require behavior. |
-| `OBSERVABLE` | The behavior is visible in Codex threads, tool output, diffs, logs or artifacts. |
-| `INJECTABLE` | The requirement can be loaded into Codex context. |
-| `GUIDANCE_ONLY` | Codex can be instructed, but the host does not technically enforce it. |
-| `UNSUPPORTED` | No native Codex surface found for the requirement. |
+| Developer | changed scope, rationale, build/test observations where applicable |
+| Tester | checks selected, commands or reproducible procedure, result, remaining gaps |
+| Code Reviewer | reviewed scope, findings or explicit no-findings result, residual risk |
+| Architect | decision, tradeoffs, rejected alternatives, open questions |
+| Researcher | sources, factual claims, inferences and uncertainty |
+| Critic | challenged claims, missing evidence and unresolved uncertainty |
+| Security Reviewer | reviewed threat surface, findings and mitigations |
 
-## Current conclusion
+Repository files, commits, PRs, test reports and CI remain authoritative for their own content. AWCP stores the work-control record and stable references needed to explain why the evidence satisfied a gate.
 
-For Codex, the first viable integration shape does not replace or proxy the native runtime. It combines the future local AWCP product with a strict operational methodology delivered through:
+### 6. Completion
 
-- `AGENTS.md` for baseline rules;
-- optional instruction-only skills for reusable role playbooks;
-- subagents or separate sessions for role separation;
-- Codex sandbox, approvals, rules and MCP tool policy for technical boundaries;
-- explicit evidence and completion rules in the task transcript and repository artifacts;
-- a future client adapter that reads and writes the authoritative local AWCP work state through the strongest validated native surface.
+Work is eligible for completion only when the AWCP service validates all of the following:
 
-The next validation step should be a dry run on two realistic Codex tasks:
+- accepted intent is satisfied or explicitly narrowed;
+- every required role is satisfied or explicitly waived by an authorized human;
+- required independence constraints are satisfied;
+- required evidence exists and is linked to the correct execution;
+- tests/checks ran or an accepted skip reason exists;
+- review findings are resolved or explicitly accepted;
+- no blocking constraint or approval remains.
 
-1. implementation task: `Developer + Tester + Code Reviewer`;
-2. architecture task: `Architect + Senior Engineer`.
+When Codex attempts to stop:
 
-The spike should measure which guarantees are actually enforceable, observable or merely guidance.
+1. the `Stop` hook queries the AWCP completion decision;
+2. if ineligible, it returns a focused continuation reason;
+3. Codex continues in a new turn to execute the missing role, repair a finding or request human action;
+4. only an eligible task may be represented by AWCP as complete.
+
+A user interruption, process failure or session close records an interrupted or stale execution. `SessionEnd` never completes work.
+
+## What this design guarantees
+
+### Guaranteed by the AWCP service
+
+- invalid work-state transitions are rejected;
+- completion cannot be recorded without the current completion contract;
+- evidence is linked to explicit task, role and execution identities;
+- waivers and degraded guarantees remain visible and attributable;
+- the TUI reads the same authoritative state as Codex integrations.
+
+### Guaranteed while trusted hooks are active
+
+- prompts can be blocked or enriched before the model receives them;
+- supported local mutations can be denied before execution;
+- supported tool calls can be attributed to session and turn;
+- subagent start/stop can be attributed to agent ID and type;
+- Codex cannot end a normal role or main turn cleanly while the corresponding AWCP gate says to continue.
+
+### Not guaranteed by Codex native surfaces
+
+- prevention of all possible activity after the user disables the integration;
+- coverage of hosted tools or every specialized local tool path;
+- automatic selection of the correct work item from arbitrary prose without confirmation;
+- deterministic subagent spawning from instructions alone;
+- semantic independence merely because two role labels differ;
+- completion when the human force-closes or interrupts Codex;
+- a stable contract based on transcript-file parsing;
+- passive real-time observation of a thread owned by another App Server process.
+
+## Rejected primary integration shapes
+
+### `AGENTS.md` or skills only
+
+Rejected because they deliver methodology but cannot guarantee participation or completion gates.
+
+### MCP only
+
+Rejected because a required server can guarantee availability, not that the model invokes the correct domain operation at the correct time.
+
+### App Server or SDK as the default execution path
+
+Rejected for the primary interactive experience because it would make AWCP launch or own Codex conversations. It remains valid for optional managed jobs and TUI history enrichment.
+
+### Transcript parsing
+
+Rejected because Codex explicitly marks transcript format as unstable. Native hook fields and App Server APIs are the supported contracts.
+
+### Repository artifacts as the sole state
+
+Rejected because they do not provide authoritative cross-session task, role, execution, timing and completion state required by AWCP-DEC-009.
+
+## Empirical validation plan
+
+Documentation establishes the candidate contract. The next step is a non-production dry run with disposable tasks and a minimal fake AWCP endpoint or fixture, not the product implementation.
+
+### Test A - hook enforcement
+
+- verify `UserPromptSubmit` can inject and block;
+- verify `PreToolUse` blocks shell, unified exec, `apply_patch` and MCP calls before side effects;
+- verify expected behavior for tool paths not covered by hooks;
+- verify hook trust, changed-hook review and disabled-hook behavior;
+- verify Windows command invocation and timeout behavior.
+
+### Test B - role lifecycle
+
+- configure `developer`, `tester` and `code-reviewer` custom agents;
+- verify actual `SubagentStart` and `SubagentStop` payloads;
+- verify parent session ID, agent ID, type and turn correlation;
+- verify a blocked `SubagentStop` produces one focused continuation and does not loop indefinitely;
+- verify effective sandbox inheritance for each role.
+
+### Test C - completion gate
+
+- run an implementation task requiring Developer + Tester + Code Reviewer;
+- attempt to stop before test evidence and before review evidence;
+- verify `Stop` continuation behavior and human interruption behavior;
+- verify that only the authoritative service can produce completion.
+
+### Test D - TUI observation substrate
+
+- start Codex work in the desktop app and CLI;
+- query a separate App Server with `thread/list` and `thread/read`;
+- measure freshness, locking, source kind, lineage and active status;
+- determine whether polling supported APIs is sufficient or hooks must publish all live identity into AWCP;
+- do not parse raw rollout JSONL.
+
+### Test E - degraded operation
+
+- stop the AWCP service;
+- fail required MCP initialization;
+- disable or modify an untrusted hook;
+- interrupt Codex during an active role;
+- verify that the task remains blocked, degraded, interrupted or stale, never complete.
+
+## Exit criteria
+
+SPIKE-001 can close only when the dry run records:
+
+- exact supported hook payloads on the installed Windows Codex version;
+- actual block/continue behavior for each selected gate;
+- reliable session, turn and agent correlation;
+- effective role permission behavior;
+- failure and recovery behavior when AWCP or MCP is unavailable;
+- App Server viability for secondary TUI inspection;
+- an updated guarantee matrix based on observed results.
+
+The installed Windows application observed during this documentation pass is `OpenAI.Codex 26.803.10989.0`. Direct CLI execution from the current automation environment was denied by Windows Apps permissions, so runtime claims remain pending until the dedicated dry run.
 
 ## Sources
 
 - [OpenAI Docs - Custom instructions with AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
 - [OpenAI Docs - Subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
+- [OpenAI Docs - Hooks](https://learn.chatgpt.com/docs/hooks)
+- [OpenAI Docs - Model Context Protocol](https://learn.chatgpt.com/docs/extend/mcp)
 - [OpenAI Docs - Agent approvals and security](https://learn.chatgpt.com/docs/agent-approvals-security)
 - [OpenAI Docs - Rules](https://learn.chatgpt.com/docs/agent-configuration/rules)
-- [OpenAI Docs - Hooks](https://learn.chatgpt.com/docs/hooks)
 - [OpenAI Docs - Build skills](https://learn.chatgpt.com/docs/build-skills)
-- [OpenAI Docs - Model Context Protocol](https://learn.chatgpt.com/docs/extend/mcp)
+- [OpenAI Docs - Build plugins](https://learn.chatgpt.com/docs/build-plugins)
+- [OpenAI Docs - Record and Replay](https://learn.chatgpt.com/docs/extend/record-and-replay)
+- [OpenAI Docs - Codex App Server](https://learn.chatgpt.com/docs/app-server)
+- [OpenAI Docs - Non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode)
+- [OpenAI Docs - Codex SDK](https://learn.chatgpt.com/docs/codex-sdk)
 - [OpenAI Docs - Configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference)
-- [OpenAI Docs - Record & Replay](https://learn.chatgpt.com/docs/extend/record-and-replay)
+- [OpenAI Docs - Managed configuration](https://learn.chatgpt.com/docs/enterprise/managed-configuration)
