@@ -4,7 +4,7 @@
 
 This log intentionally contains only a small set of accepted conceptual boundaries.
 
-`AWCP-DEC-001` through `AWCP-DEC-010` are currently accepted. Everything listed under **Open questions and undecided choices** remains `OPEN`.
+`AWCP-DEC-001` through `AWCP-DEC-011` are currently accepted. Everything listed under **Open questions and undecided choices** remains `OPEN`.
 
 Decision status vocabulary:
 
@@ -214,17 +214,17 @@ UNSUPPORTED
 
 If a requirement can only be expressed as instruction, it must not be described as deterministic enforcement.
 
-This spike deliberately isolates the methodology and Codex integration contract before the local AWCP product is implemented. "Methodology-first" does not mean "software-free"; it means that product mechanisms must implement a validated work method rather than define it accidentally.
+This spike deliberately isolates the methodology and Codex integration contract before the local companion architecture is selected. "Methodology-first" does not mean "software-free"; it means that selected product mechanisms must implement a validated work method rather than define it accidentally.
 
 ---
 
-## AWCP-DEC-009 — AWCP is a local companion product with authoritative work-control state
+## AWCP-DEC-009 — AWCP requires a local companion experience with authoritative work-control state
 
 **Status:** ACCEPTED
 
 ### Decision
 
-AWCP will include software running locally alongside the user's coding-agent environment. It will own the local database-backed control state required to organize and audit agentic software work.
+AWCP will provide a local companion experience alongside the user's coding-agent environment. It is logically responsible for the database-backed control state required to organize and audit agentic software work, whether that state is implemented by AWCP or supplied through a proven local provider composition.
 
 At minimum, that state must be able to represent or reference:
 
@@ -238,17 +238,17 @@ At minimum, that state must be able to represent or reference:
 AWCP will expose this state to:
 
 - coding agents, through the strongest suitable client integration surface;
-- humans, through a local TUI optimized for fast inspection and light editing.
+- humans, through a local UI/TUI optimized for fast inspection and light editing.
 
-The local TUI and agent integrations operate on the same authoritative work-control state. The TUI does not maintain a separate projection database or become the primary coding-agent interface.
+The local inspection surface and agent integrations operate on the same authoritative work-control records. The UI/TUI does not maintain a separate editable truth or become the primary coding-agent interface.
 
 ### Consequence
 
-AWCP is not merely a collection of prompts, `AGENTS.md` files or skills. Those are client integration and methodology-delivery mechanisms around a persistent local product.
+The required AWCP experience is not delivered by prompts, `AGENTS.md` files or skills alone. Those are client integration and methodology-delivery mechanisms around persistent local authorities, whether supplied by AWCP or composed providers.
 
 This does not make AWCP a coding-agent runtime or execution proxy. Codex, Claude Code, OpenCode and similar clients continue to own their conversations, model calls, agent loops and tool execution. AWCP records and governs the work around those executions.
 
-The existence of a local work-control database and TUI is decided. Their implementation language, database technology, process lifecycle, API/protocol and client-specific adapters remain open and must be validated before selection.
+The existence of persistent local work-control state and a fast human inspection surface is decided. Whether AWCP implements them, composes them from existing local products or needs only a thin semantic view remains subject to `AWCP-DEC-011`. Their implementation language, database technology, process lifecycle, API/protocol and client-specific adapters remain open and must be validated before selection.
 
 ---
 
@@ -275,6 +275,52 @@ The AWCP service remains the only authority that may record work completion. The
 Codex-path enforcement is conditional on the exact required hooks being active and trusted. A missing or changed hook, unavailable required MCP server, unsupported tool path or interrupted client marks the execution degraded, blocked, interrupted or stale; none of those states may be represented as complete.
 
 Every supported Codex release must rerun the SPIKE-001 fixture. Runtime observations override undocumented assumptions and documented-but-unobserved surfaces when AWCP assigns a guarantee level.
+
+---
+
+## AWCP-DEC-011 - Existing local work/worker products must be tested as substitutes before AWCP implements a substrate
+
+**Status:** ACCEPTED
+
+### Decision
+
+AWCP will not implement a custom work database, task tracker, coordination bus or TUI until an empirical composition test has attempted to satisfy the accepted work-control contract with current local products.
+
+The first substitution candidate is:
+
+```text
+Okto Pulse  -> work, specifications, tasks, validation and evidence
+Okto Nexus  -> agents, sessions, handoffs, claims and coordination history
+Codex       -> native execution, thread/turn identity and tools
+```
+
+The test must exercise at least:
+
+- implementation work requiring `Developer + Tester + independent Code Reviewer`;
+- architecture/organization work requiring `Architect + independent Senior Engineer/Critic`;
+- correlation to native Codex root and child thread identifiers;
+- role-scoped evidence and one deterministic completion verdict;
+- human inspection of work, actor, session, time, reason and evidence;
+- visible failure when a required integration or guarantee is unavailable.
+
+`AWCP-DEC-009` remains in force: a local companion experience, authoritative control state and fast human inspection are required. This decision clarifies that **logical ownership does not require duplicate physical storage**. Existing local software may supply all or part of that product if source-of-truth boundaries are explicit and only one authority can issue the final work-completion verdict.
+
+### Consequence
+
+The provisional AWCP-specific boundary is limited to the semantics that still appear absent after source inspection:
+
+- a stable work reference and work contract;
+- work-derived `RoleRequirement` slots;
+- executor bindings correlated with native coding-client identities;
+- execution attempts and role-scoped evidence;
+- independence, degradation and waiver records;
+- a derived completion evaluation and auditable transitions.
+
+This list is a test oracle, not an approved schema. If Pulse, Nexus and Codex satisfy it through supported configuration and APIs, AWCP must shrink accordingly and may not need a custom database or TUI. If they do not, only the demonstrated missing layer may be implemented.
+
+Adoption also remains conditional on explicit license, privacy, operational and version-surface review. SPIKE-002 inspected source but did not initialize or run Pulse or Nexus.
+
+Evidence: [`spikes/SPIKE-002-WORK-SUBSTRATE.md`](spikes/SPIKE-002-WORK-SUBSTRATE.md).
 
 ---
 
@@ -341,11 +387,10 @@ Everything below remains **OPEN**.
 
 ## Work substrate and persistence
 
-- `OPEN` — Beads;
-- `OPEN` — Backlog.md;
-- `OPEN` — Spec Kit as a process/harness substrate;
-- `OPEN` — Okto Pulse as a sufficiently close existing solution;
-- `OPEN` — custom work model;
+- `OPEN` — result of the Pulse + Nexus + Codex empirical substitution test required by `AWCP-DEC-011`;
+- `OPEN` — provider selection among Pulse/Nexus, Beads, Backlog.md, Spec Kit composition or another local system;
+- `OPEN` — whether any AWCP-specific persistence remains necessary after the substitution test;
+- `OPEN` — custom work model, permitted only for the missing semantics demonstrated by that test;
 - `OPEN` — detailed source-of-truth semantics per work concern;
 - `OPEN` — exact boundary between state AWCP owns and external artifacts it references;
 - `OPEN` — repository files;

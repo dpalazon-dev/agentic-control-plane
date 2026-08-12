@@ -60,7 +60,7 @@ The arrows are conceptual rather than a final process topology. AWCP itself is e
 
 **BOUNDARY:** AWCP governs software-work semantics and required agent responsibilities, not the operational lifecycle of an agent fleet.
 
-**BOUNDARY:** AWCP owns authoritative local work-control state and exposes it to coding-agent integrations and its TUI.
+**BOUNDARY:** AWCP owns the work-control semantics and final completion verdict. The authoritative local records may be physically supplied by proven work and worker providers, provided source-of-truth boundaries are explicit and no second editable truth is created.
 
 **BOUNDARY:** AWCP is not an execution proxy. Model calls, conversations, agent loops and repository tool execution remain owned by the coding client.
 
@@ -605,11 +605,11 @@ SPIKE-001 must determine what can actually be invoked, injected, enforced and ob
 
 ---
 
-## 12. Local TUI and observation
+## 12. Local inspection surface and observation
 
 Humans need visibility into the work-control state without replacing the coding-client interface.
 
-The AWCP TUI should project:
+The composed local UI/TUI should project:
 
 - intent / work hierarchy;
 - dependencies and readiness;
@@ -629,15 +629,15 @@ The AWCP TUI should project:
 
 Other projections may include CLI output, structured API responses or local tooling.
 
-The TUI is a product component but remains secondary to the coding client. It owns no independent state and must use the same authoritative work-control store as agent integrations.
+The inspection surface remains secondary to the coding client. It may be supplied by AWCP or a proven local provider, but owns no independent state and must use the same authoritative records as agent integrations.
 
 ---
 
 ## 13. Persistence and ownership
 
-**BOUNDARY:** AWCP owns durable local state for its work-control responsibilities. This is necessary for continuity across coding clients, agents and sessions and for reconstructing why work changed state.
+**BOUNDARY:** AWCP requires durable local authority for its work-control responsibilities. This is necessary for continuity across coding clients, agents and sessions and for reconstructing why work changed state. Logical authority does not imply that AWCP must implement or duplicate every physical record.
 
-The minimum durable record should support:
+The composed durable record should support or reference:
 
 - intent, work packages, tasks and dependencies;
 - constraints, classification, risk and lifecycle state;
@@ -659,7 +659,7 @@ Questions before choosing storage and process topology:
 - **OPEN:** query patterns required by agents and the TUI;
 - **OPEN:** database, API and migration technology.
 
-A local database is required; its technology should not be selected until these requirements become concrete.
+Persistent local database-backed state is required. A custom AWCP database is not: Pulse, Nexus or another selected provider may supply part or all of the physical state if the empirical substitution test proves the required invariants. No technology should be selected until that test is complete.
 
 ---
 
@@ -705,13 +705,17 @@ Expected output: a real capability/guarantee matrix.
 
 ### SPIKE-002 — Local work-control state and persistence
 
-Define the minimum authoritative AWCP record, then compare Beads, Backlog.md, Spec Kit composition, Okto Pulse, simple repository state and a minimal custom representation as implementation inputs or dependencies.
+Source comparison: [`spikes/SPIKE-002-WORK-SUBSTRATE.md`](spikes/SPIKE-002-WORK-SUBSTRATE.md).
 
-Expected output: evidence for the exact state AWCP must own, which external artifacts it should reference, and the queries required by agents and the TUI.
+The source-level comparison is complete. Beads, Backlog.md and Spec Kit are credible providers for narrower work concerns. Pulse and Nexus together are a serious substitute for most of the proposed local product: Pulse governs work and validation; Nexus provides agents, sessions, handoffs, claims and coordination history.
+
+The comparison did not find a general aggregate for work-derived semantic role obligations, native Codex thread/turn lineage or role-scoped aggregate completion. These are provisional gaps, not permission to implement them. `AWCP-DEC-011` requires an empirical Pulse + Nexus + Codex substitution test first.
+
+Output: required invariants, agent/TUI query inventory, candidate matrix, source-of-truth boundaries and a provisional minimal semantic model used only as the test oracle.
 
 ### SPIKE-003 — Role-driven adaptive orchestration
 
-Test the smallest useful methodology loop:
+Use the smallest useful methodology loop as the empirical Pulse + Nexus + Codex substitution test:
 
 ```text
 human intent
@@ -735,7 +739,9 @@ accept, repair or escalate
 
 The experiment should compare at least two work classes, for example implementation and architecture/organization.
 
-It should test whether role composition adds real reliability/clarity without requiring AWCP to implement a custom agent runtime.
+It should test whether role composition adds real reliability/clarity and whether the accepted local companion experience can be supplied by existing products without implementing a custom AWCP substrate or agent runtime.
+
+Pass/fail conditions are defined in [`spikes/SPIKE-002-WORK-SUBSTRATE.md`](spikes/SPIKE-002-WORK-SUBSTRATE.md). The experiment must not modify Pulse or Nexus before establishing the supported baseline, and it must not initialize either product until its license and operating terms have been reviewed explicitly.
 
 ### SPIKE-004 — Persistence and concurrency
 

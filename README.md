@@ -4,7 +4,7 @@
 
 The project does **not** aim to control agents as managed infrastructure or replace their runtimes. Its primary object is the **work**: intent, work packages, tasks, dependencies, constraints, decisions, required agent roles, evidence and completion state.
 
-AWCP is expected to include local software running alongside the coding client. That software owns a local database-backed work-control state and exposes a secondary TUI for quickly inspecting and lightly editing tasks, role assignments, execution history, agent/session attribution, decisions and evidence. Agents interact with the same control layer through client-supported integration surfaces; they do not run inside an AWCP-owned model runtime.
+AWCP requires a local companion experience alongside the coding client: persistent database-backed work-control state and a fast inspection surface for tasks, role assignments, execution history, agent/session attribution, decisions and evidence. Existing local products may supply some or all of that state and UI if they prove the required guarantees; AWCP must not duplicate them by default. Agents interact with the same logical control layer through client-supported integration surfaces; they do not run inside an AWCP-owned model runtime.
 
 The core question is:
 
@@ -40,11 +40,16 @@ Current Codex validation:
 - [`docs/spikes/SPIKE-001-CODEX.md`](docs/spikes/SPIKE-001-CODEX.md) - completed Codex-native methodology and integration contract, backed by a first Windows dry run.
 - [`docs/spikes/SPIKE-001-CODEX-EVIDENCE.md`](docs/spikes/SPIKE-001-CODEX-EVIDENCE.md) - runtime observations, native identifiers, limitations and revalidation rule.
 
+Current work-substrate validation:
+
+- [`docs/spikes/SPIKE-002-WORK-SUBSTRATE.md`](docs/spikes/SPIKE-002-WORK-SUBSTRATE.md) - source-level comparison, minimum invariants and the required Pulse + Nexus + Codex substitution test.
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) - `AWCP-DEC-011` blocks a custom database or TUI until that substitution test demonstrates the missing layer.
+
 The project deliberately follows:
 
 `research → hypotheses → spikes → evidence → decisions → design → implementation`
 
-No concrete work schema, context system, permission system, storage technology, process topology, integration protocol, language, API, TUI technology or role catalog has been selected.
+No concrete work schema, provider, context system, permission system, storage technology, process topology, integration protocol, language, API, TUI technology or role catalog has been selected. Pulse and Nexus are test candidates, not adopted dependencies.
 
 ## Why "Work Control Plane"?
 
@@ -53,13 +58,13 @@ Agent Control Plane        → governs agents / agent infrastructure
 Agentic Work Control Plane → governs the software work performed with coding agents
 ```
 
-The Work Control Plane determines what work exists, persists its state and history, records which agents and sessions participated, derives which responsibilities must participate, tracks evidence and decides whether completion is justified. The coding client remains the primary interaction and execution surface; the AWCP TUI is the primary inspection surface for work-control state.
+The Work Control Plane determines what work exists, ensures its state and history remain persistent, records which agents and sessions participated, derives which responsibilities must participate, tracks evidence and decides whether completion is justified. The coding client remains the primary interaction and execution surface; the composed local UI/TUI is the primary inspection surface for work-control state.
 
 ## What this is not
 
 This project is not intended to become another coding client, IDE, chat interface, Jira clone, generic workflow engine, agent fleet manager, model runtime, custom-agent framework or prompt framework. Its TUI is a companion inspection and light-editing interface, not the place where the user must conduct coding-agent conversations.
 
-It also does not assume that AWCP must own every supporting subsystem. Existing tools may remain authoritative for specifications, context, memory, permissions, Git, CI, tests, telemetry or other concerns. AWCP owns the work-control record and may reference those external artifacts rather than duplicate them.
+It also does not assume that AWCP must implement every supporting subsystem or physical record. Existing tools may remain authoritative for specifications, tasks, worker sessions, context, memory, permissions, Git, CI, tests, telemetry or other concerns. AWCP owns the role/completion semantics and may compose or reference those records rather than duplicate them.
 
 ## Read in this order
 
@@ -68,5 +73,6 @@ It also does not assume that AWCP must own every supporting subsystem. Existing 
 3. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architectural hypotheses and boundaries still requiring validation.
 4. [`docs/DECISIONS.md`](docs/DECISIONS.md) — accepted boundaries and explicitly open choices.
 5. [`docs/spikes/SPIKE-001-CODEX.md`](docs/spikes/SPIKE-001-CODEX.md) — first Codex-only validation spike.
+6. [`docs/spikes/SPIKE-002-WORK-SUBSTRATE.md`](docs/spikes/SPIKE-002-WORK-SUBSTRATE.md) — current work-substrate comparison and next falsification test.
 
 This repository is intentionally small until evidence justifies additional structure.

@@ -378,8 +378,10 @@ The work-versus-workers distinction makes OktoLabs especially relevant.
 
 Sources:
 
-- [Okto Pulse](https://pulse.oktolabs.ai/)
-- [Okto Nexus](https://nexus.oktolabs.ai/)
+- [Okto Pulse](https://oktolabs.ai/platform/pulse/)
+- [Okto Pulse source](https://github.com/OktoLabsAI/okto-pulse)
+- [Okto Nexus](https://oktolabs.ai/platform/nexus/)
+- [okto-nexus source distribution](https://pypi.org/project/okto-nexus/)
 
 Their published separation can be summarized as:
 
@@ -403,6 +405,10 @@ Pulse already demonstrates much of the proposition that agent-assisted software 
 - MCP access;
 - a human-visible board.
 
+**FACT:** Source inspection of Pulse `v0.3.1` found task/specification lineage, evidence and validation gates, configurable required task validation and reviewer-separation modes. Its public package exposes a broad MCP surface and a local web workbench.
+
+**FACT:** Source inspection of `okto-nexus 0.1.3` found logical agents with role/capability profiles, authenticated Nexus sessions, append-only events, messages, artifacts, policies, approvals and claimable handoffs. Handoffs support leases, dependencies, acceptance criteria, capability/agent-based verification and anti-self-verification.
+
 Therefore AWCP cannot justify itself by persistent tasks, specs, evidence or UI alone.
 
 The newer AWCP hypothesis adds questions such as:
@@ -413,7 +419,9 @@ The newer AWCP hypothesis adds questions such as:
 - can context and permissions be scoped per role using existing systems?
 - can these guarantees exist without adopting a complete custom-agent runtime or mandatory worker-coordination platform?
 
-**HYPOTHESIS:** Pulse/Nexus together may already solve a large part of the desired experience. They remain falsification candidates, not merely inspiration.
+The source model also exposes the remaining distinction. Pulse assignment/validation and Nexus routing roles are not, by themselves, a general aggregate of **work-derived semantic role obligations**. Nexus sessions are Nexus identities, not automatically native Codex thread/turn identities.
+
+**DECISION:** Pulse/Nexus together are now the first substitution candidate. `AWCP-DEC-011` prevents a custom AWCP work database or TUI until an empirical Pulse + Nexus + Codex test attempts the required role composition, native lineage, evidence and completion guarantees.
 
 ---
 
@@ -425,7 +433,7 @@ These systems matter because AWCP may need durable work, dependency, readiness a
 
 Primary source: [gastownhall/beads](https://github.com/gastownhall/beads).
 
-**FACT:** Beads provides structured persistent work/issue state for coding agents, including dependency relationships and ready-work queries.
+**FACT:** The inspected Beads snapshot uses Dolt-backed persistent issue state, dependency relationships, ready/blocked queries, atomic claims, structured JSON, per-issue history and an optional ordered workspace event journal. Embedded mode is single-writer; server mode supports concurrent writers. `.beads/issues.jsonl` is an interchange export rather than the source of truth.
 
 Reusable patterns include:
 
@@ -435,7 +443,7 @@ Reusable patterns include:
 - concurrency and claiming patterns;
 - coding-agent bootstrap/integration patterns.
 
-**INFERENCE:** Beads may already solve a substantial portion of AWCP's `Work` responsibility.
+**INFERENCE:** Beads may already solve a substantial portion of AWCP's task graph, readiness, claim and event responsibilities.
 
 Remaining AWCP-specific questions include role requirements, role evidence, client-specific role realization and governance guarantees.
 
@@ -443,7 +451,7 @@ Remaining AWCP-specific questions include role requirements, role evidence, clie
 
 Primary source: [MrLesk/Backlog.md](https://github.com/MrLesk/Backlog.md).
 
-**FACT:** Backlog.md stores human-readable project-local work in Markdown and supports tasks, acceptance criteria, Definition of Done, milestones, dependencies, plans, comments and decisions, with CLI/MCP access for coding agents.
+**FACT:** Backlog.md stores human-readable project-local work in Markdown and supports tasks, acceptance criteria, Definition of Done, milestones, dependencies, parent/subtasks, semantic task types, plans, notes, comments and final summaries, with CLI/MCP access, stable JSON reads and a terminal board.
 
 Reusable patterns include:
 
@@ -453,7 +461,7 @@ Reusable patterns include:
 - stable CLI/JSON interaction;
 - multi-client discovery/integration.
 
-**INFERENCE:** Backlog.md is a strong falsification test for the need for a custom AWCP work schema/database.
+**INFERENCE:** Backlog.md is a strong provider candidate when Git readability and terminal inspection dominate. It does not establish transactional role satisfaction, native execution lineage or role-aware aggregate completion.
 
 ## 5.3 Task Master AI
 
@@ -891,7 +899,7 @@ AWCP should attempt to use existing context, memory, permissions, sandboxing and
 
 ## 14.5 What exact work state must AWCP own?
 
-AWCP will own authoritative work-control state. The remaining question is its minimum schema and which specifications, repository artifacts, Git/PR/CI evidence, telemetry and context records should remain external references.
+AWCP owns authoritative role/completion semantics. The remaining question is whether it must physically persist any dedicated records after composing local work/worker providers, and which specifications, tasks, sessions, repository artifacts, Git/PR/CI evidence, telemetry and context records can remain authoritative references.
 
 ## 14.6 What does "done" mean across work types?
 
@@ -901,9 +909,9 @@ Implementation, research, debugging, migration, documentation and architecture w
 
 # 15. Potential genuine gap
 
-The strongest current hypothesis is:
+The strongest current hypothesis, now narrowed by SPIKE-002, is:
 
-> **Provide a small, local and agent-agnostic work-control product that persistently turns software work into explicit role-driven execution contracts, exposes that state through a TUI, and composes existing coding-agent capabilities to carry them out without replacing the developer's normal coding client.**
+> **Provide only the missing semantic layer that turns existing local work into explicit role obligations, binds them to native coding-agent executions, attributes evidence and produces one auditable completion verdict.**
 
 Potential differentiation, if validated, comes from the combination of:
 
@@ -916,36 +924,36 @@ Potential differentiation, if validated, comes from the combination of:
 7. **evidence attached to responsibilities and completion**;
 8. **integration with existing coding agents**, not a required custom agent runtime;
 9. **reuse of existing context/control/observability infrastructure** rather than rebuilding it;
-10. **authoritative, human-readable local work state** shared by agent integrations and the TUI;
+10. **authoritative, inspectable local work state** shared by agent integrations and a local UI/TUI;
 11. **traceability across agents and sessions** where the coding client exposes trustworthy identity and lifecycle signals.
 
-The separate local product is now an accepted boundary. Research must still minimize its owned schema and infrastructure rather than treating every adjacent capability as part of AWCP.
+The local companion experience is an accepted boundary. A separately implemented AWCP service, database and TUI are not. Pulse/Nexus or another provider composition may supply the whole experience; AWCP must implement only a gap demonstrated by the empirical substitution test.
 
 ---
 
 # 16. Falsification criteria
 
-AWCP should shrink to the smallest useful local product when existing tools can provide parts of the desired experience through composition.
+AWCP should first attempt to disappear as a separate product when existing tools can provide the desired experience through composition.
 
 Examples:
 
 ```text
-AWCP core/TUI + Spec Kit + Beads + client-native roles/hooks/policies
+Pulse + Nexus + Codex hooks/agents
 
-AWCP core/TUI + Backlog.md + coding-client agents + CI evidence
+thin AWCP role/completion overlay + Pulse/Nexus + Codex
 
-AWCP core/TUI + reusable Okto Pulse/Nexus capabilities
+thin AWCP role/completion overlay + Spec Kit + Beads + Codex
 
-AWCP core/TUI + coding-client-native agents + project memory + Git/CI
+thin AWCP role/completion overlay + Backlog.md + Codex + Git/CI
 
-AWCP core/TUI + Symphony or another external runner for optional managed execution
+minimal owned AWCP substrate only after every provider composition fails an invariant
 ```
 
 The right research question is now:
 
-> **What is the smallest authoritative local work-control core, TUI and integration set that gives us persistent, role-driven, governed and verifiable software work across the coding agents we already use?**
+> **Can current local work and worker products already provide persistent, role-driven, governed and verifiable software work with Codex; if not, what exact semantic record is missing?**
 
-Only that irreducible work-control core should become owned AWCP architecture; adjacent context, permission, runtime and observability systems should still be composed where possible.
+Only a missing record demonstrated by that test should become owned AWCP architecture; tasks, specifications, worker coordination, context, permissions, runtime, UI and observability should remain composed where possible.
 
 ---
 
@@ -963,6 +971,8 @@ Only that irreducible work-control core should become owned AWCP architecture; a
 - deterministic verification tooling;
 - custom-agent frameworks;
 - generic worker orchestration patterns;
+- local specifications, task validation, evidence and workbench UI through products such as Pulse;
+- local agent sessions, claims, handoffs, independent handoff verification and coordination history through products such as Nexus;
 - managed Codex dispatch, workspace isolation, retries and run observation;
 - agent fleet governance.
 
@@ -978,7 +988,8 @@ Only that irreducible work-control core should become owned AWCP architecture; a
 
 ## Still uncertain
 
-- minimal AWCP work/role model;
+- whether AWCP needs any separately implemented product after the Pulse + Nexus + Codex test;
+- minimal AWCP work/role model if a gap remains;
 - minimum useful role taxonomy;
 - role-composition rules;
 - cross-client role materialization;
@@ -986,11 +997,11 @@ Only that irreducible work-control core should become owned AWCP architecture; a
 - integration with existing local context/control systems;
 - mandatory AWCP participation while preserving native coding clients;
 - exact work-control schema and external-reference boundary;
-- storage, process-lifecycle, persistence and concurrency requirements;
+- storage, process-lifecycle, persistence and concurrency requirements only for demonstrated missing state;
 - reliable coding-client, agent and session attribution.
 
 ## Potential genuine gap
 
-A **thin local work-methodology control product** may be underserved: one that persistently tells existing coding agents not only *what work exists*, but **which distinct agent responsibilities must participate, under what context/permissions, and what evidence each must produce**; records execution and session provenance; and exposes the same state through a fast TUI while delegating context, permission, runtime and observability machinery to systems that already solve those problems.
+A **thin role/completion semantic overlay** may be underserved: one that tells existing coding agents **which distinct responsibilities must participate, which native executions satisfied them and what evidence justifies completion**, while delegating work, worker coordination, UI, context, permissions, runtime and observability to systems that already solve them.
 
 The next phase should optimize for **composition and falsification**, not feature accumulation.
