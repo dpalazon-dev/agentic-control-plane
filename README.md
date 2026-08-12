@@ -1,8 +1,10 @@
 # Agentic Work Control Plane
 
-`agentic-work-control-plane` is a research project investigating a **local, agent-agnostic control plane for persistent, governed and verifiable software work across existing coding agents**.
+`agentic-work-control-plane` is a research project defining a **local, agent-agnostic companion control plane for persistent, governed and verifiable software work across existing coding agents**.
 
 The project does **not** aim to control agents as managed infrastructure or replace their runtimes. Its primary object is the **work**: intent, work packages, tasks, dependencies, constraints, decisions, required agent roles, evidence and completion state.
+
+AWCP is expected to include local software running alongside the coding client. That software owns a local database-backed work-control state and exposes a secondary TUI for quickly inspecting and lightly editing tasks, role assignments, execution history, agent/session attribution, decisions and evidence. Agents interact with the same control layer through client-supported integration surfaces; they do not run inside an AWCP-owned model runtime.
 
 The core question is:
 
@@ -35,13 +37,13 @@ The Work Control Plane should also **reuse rather than reimplement** context man
 
 Current active spike:
 
-- [`docs/spikes/SPIKE-001-CODEX.md`](docs/spikes/SPIKE-001-CODEX.md) - Codex-native methodology surfaces for strict, auditable work execution without middleware or a custom runtime.
+- [`docs/spikes/SPIKE-001-CODEX.md`](docs/spikes/SPIKE-001-CODEX.md) - Codex-native methodology and integration surfaces for strict, auditable work execution without replacing Codex's runtime.
 
 The project deliberately follows:
 
 `research → hypotheses → spikes → evidence → decisions → design → implementation`
 
-No work substrate, context system, permission system, storage model, runtime model, integration protocol, language, API, workflow representation, TUI technology or concrete role catalog has been selected.
+No concrete work schema, context system, permission system, storage technology, process topology, integration protocol, language, API, TUI technology or role catalog has been selected.
 
 ## Why "Work Control Plane"?
 
@@ -50,13 +52,13 @@ Agent Control Plane        → governs agents / agent infrastructure
 Agentic Work Control Plane → governs the software work performed with coding agents
 ```
 
-The Work Control Plane determines what work exists, which responsibilities must participate, which constraints and context apply, what evidence is required and whether completion is justified. The coding client remains the primary interaction and execution surface.
+The Work Control Plane determines what work exists, persists its state and history, records which agents and sessions participated, derives which responsibilities must participate, tracks evidence and decides whether completion is justified. The coding client remains the primary interaction and execution surface; the AWCP TUI is the primary inspection surface for work-control state.
 
 ## What this is not
 
-This project is not intended to become another coding client, IDE, chat interface, Jira clone, generic workflow engine, agent fleet manager, model runtime, custom-agent framework, prompt framework or mandatory TUI.
+This project is not intended to become another coding client, IDE, chat interface, Jira clone, generic workflow engine, agent fleet manager, model runtime, custom-agent framework or prompt framework. Its TUI is a companion inspection and light-editing interface, not the place where the user must conduct coding-agent conversations.
 
-It also does not assume that AWCP must own every supporting subsystem. Existing tools may remain authoritative for specs, tasks, context, memory, permissions, Git, CI, tests, telemetry or other concerns if composition proves sufficient.
+It also does not assume that AWCP must own every supporting subsystem. Existing tools may remain authoritative for specifications, context, memory, permissions, Git, CI, tests, telemetry or other concerns. AWCP owns the work-control record and may reference those external artifacts rather than duplicate them.
 
 ## Read in this order
 

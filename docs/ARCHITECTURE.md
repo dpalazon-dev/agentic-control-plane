@@ -4,7 +4,7 @@
 
 This document records **architectural hypotheses to validate** for Agentic Work Control Plane. It is not an implementation architecture.
 
-No language, database, daemon model, protocol, API, workflow engine, schema, TUI framework, context engine, permission system or storage technology is selected here. Accepted project decisions live only in [`DECISIONS.md`](DECISIONS.md).
+No language, database technology, service lifecycle, protocol, API, workflow engine, schema, TUI framework, context engine or permission system is selected here. Accepted project decisions live only in [`DECISIONS.md`](DECISIONS.md).
 
 Labels:
 
@@ -54,11 +54,15 @@ AWCP is not a runtime stack underneath a coding agent. It is a work-control laye
        └────────────────────────────────────────┘
 ```
 
-The arrows are conceptual rather than a final process topology.
+The arrows are conceptual rather than a final process topology. AWCP itself is expected to be a local companion process or service with a persistent database and a TUI projection. The exact process, API and database technology remain open.
 
 **BOUNDARY:** Existing coding clients own their native interaction surface and agent loop.
 
 **BOUNDARY:** AWCP governs software-work semantics and required agent responsibilities, not the operational lifecycle of an agent fleet.
+
+**BOUNDARY:** AWCP owns authoritative local work-control state and exposes it to coding-agent integrations and its TUI.
+
+**BOUNDARY:** AWCP is not an execution proxy. Model calls, conversations, agent loops and repository tool execution remain owned by the coding client.
 
 **BOUNDARY:** AWCP should compose existing infrastructure for context, permissions, memory, sandboxing and observability where possible rather than implementing equivalent subsystems by default.
 
@@ -601,16 +605,18 @@ SPIKE-001 must determine what can actually be invoked, injected, enforced and ob
 
 ---
 
-## 12. Observation
+## 12. Local TUI and observation
 
 Humans need visibility into the work-control state without replacing the coding-client interface.
 
-Potential projections may show:
+The AWCP TUI should project:
 
 - intent / work hierarchy;
 - dependencies and readiness;
 - required roles;
 - assigned/resolved executors;
+- coding client, agent and session attribution where observable;
+- execution attempts and timestamps;
 - current role status;
 - relevant context sources;
 - permission/enforcement guarantees;
@@ -621,36 +627,39 @@ Potential projections may show:
 - completion state;
 - derived telemetry when available.
 
-Possible observers include CLI, structured output, TUI or other local tooling.
+Other projections may include CLI output, structured API responses or local tooling.
 
-The TUI remains optional and owns no independent state.
+The TUI is a product component but remains secondary to the coding client. It owns no independent state and must use the same authoritative work-control store as agent integrations.
 
 ---
 
 ## 13. Persistence and ownership
 
-AWCP should persist only what must survive for work control.
+**BOUNDARY:** AWCP owns durable local state for its work-control responsibilities. This is necessary for continuity across coding clients, agents and sessions and for reconstructing why work changed state.
 
-Possible arrangements include:
+The minimum durable record should support:
 
-```text
-A. AWCP owns a minimal work/role state
-B. existing work substrate is authoritative
-C. multiple systems remain authoritative by concern
-D. AWCP stores only orchestration/control metadata and references
-```
+- intent, work packages, tasks and dependencies;
+- constraints, classification, risk and lifecycle state;
+- required roles and executor bindings;
+- observable client, agent and session identifiers;
+- execution attempts, timestamps and transitions;
+- decisions, approvals, evidence, findings and completion grounds.
 
-Questions before choosing storage:
+External specifications, repository artifacts, Git commits, PRs, CI runs, telemetry and context systems may remain authoritative for their own content. AWCP may store stable references and the control metadata needed to connect them to work.
 
-- **OPEN:** which work and role state needs durability;
-- **OPEN:** whether role execution state must persist;
-- **OPEN:** on-demand versus resident process;
+Questions before choosing storage and process topology:
+
+- **OPEN:** exact work-control schema and invariants;
+- **OPEN:** which external artifacts are copied, summarized or referenced;
+- **OPEN:** service startup and lifecycle model while coding clients are active;
 - **OPEN:** concurrency and locking requirements;
 - **OPEN:** crash/stale execution semantics;
 - **OPEN:** private versus Git-versioned state;
-- **OPEN:** queries and invariants actually required.
+- **OPEN:** query patterns required by agents and the TUI;
+- **OPEN:** database, API and migration technology.
 
-A database should not be selected until these become concrete.
+A local database is required; its technology should not be selected until these requirements become concrete.
 
 ---
 
@@ -660,7 +669,7 @@ A database should not be selected until these become concrete.
 
 First instance: [`spikes/SPIKE-001-CODEX.md`](spikes/SPIKE-001-CODEX.md).
 
-This spike validates Codex only and is methodology-first rather than middleware-first. It asks whether strict and auditable role-driven work can be expressed through Codex-native surfaces such as `AGENTS.md`, skills, subagents, permissions, sandboxing, rules, hooks, MCP and configuration.
+This spike validates Codex only and is methodology-first rather than product-implementation-first. It asks whether strict and auditable role-driven work can be expressed through Codex-native surfaces such as `AGENTS.md`, skills, subagents, permissions, sandboxing, rules, hooks, MCP and configuration, and which of those surfaces can later connect Codex to the local AWCP service.
 
 Expected output: a Codex-specific capability/guarantee matrix and a proposed operating rule set for:
 
@@ -678,7 +687,7 @@ Evidence
 Completion
 ```
 
-No custom runtime, middleware, adapter daemon, scheduler or product UI should be created during this spike.
+No custom runtime, execution proxy, adapter daemon, scheduler, database or product UI should be created during this spike. The spike defines requirements for the later local product; it does not deny that product's accepted existence.
 
 ### Later spike — Multi-client integration and infrastructure surfaces
 
@@ -694,11 +703,11 @@ For Claude Code, Codex, OpenCode and Gemini CLI, determine what AWCP can actuall
 
 Expected output: a real capability/guarantee matrix.
 
-### SPIKE-002 — Work substrate and ownership
+### SPIKE-002 — Local work-control state and persistence
 
-Compare Beads, Backlog.md, Spec Kit composition, Okto Pulse, simple repository state and minimal custom representation.
+Define the minimum authoritative AWCP record, then compare Beads, Backlog.md, Spec Kit composition, Okto Pulse, simple repository state and a minimal custom representation as implementation inputs or dependencies.
 
-Expected output: evidence for what work/role state AWCP actually needs to own.
+Expected output: evidence for the exact state AWCP must own, which external artifacts it should reference, and the queries required by agents and the TUI.
 
 ### SPIKE-003 — Role-driven adaptive orchestration
 

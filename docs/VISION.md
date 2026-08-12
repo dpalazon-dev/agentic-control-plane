@@ -249,6 +249,8 @@ Some roles may also require **separation of responsibility**. For example, the e
 
 The developer continues using Claude Code, Codex, OpenCode, Gemini CLI or another coding client normally.
 
+Alongside that client, AWCP runs as a local companion product. Its local work-control database is authoritative for task structure, role requirements, execution records, decisions, evidence and completion state. A secondary TUI makes that state quickly inspectable and lightly editable without becoming a replacement chat or coding interface.
+
 Conceptually:
 
 ```text
@@ -275,7 +277,7 @@ Conceptually:
               Agentic Work Control Plane
 ```
 
-The coding client owns its normal interaction and agent loop. AWCP maintains or resolves the structure the coding environment is expected to work against.
+The coding client owns its normal interaction and agent loop. AWCP owns the durable work-control state the coding environment is expected to work against. Client integrations let agents read assigned work and write execution status, decisions and evidence back to that shared state.
 
 A typical desired interaction could look like:
 
@@ -371,6 +373,9 @@ These remain research candidates rather than a final domain model:
 - `Dependency` — readiness/blocking relationships;
 - `RoleRequirement` — which agent responsibilities must participate;
 - `CapabilityRequirement` — what each role needs to do;
+- `ExecutorBinding` — which client, agent or human is assigned to satisfy a role;
+- `ExecutionRecord` — an attempt by an executor, including observable client/session identity and timestamps;
+- `StateTransition` — an auditable change in work or role state and its grounds;
 - `Constraint / Policy` — rules affecting the work;
 - `ContextRequirement` — what information a role needs;
 - `PermissionRequirement` — what operations a role may perform;
@@ -428,9 +433,9 @@ Independent testing/review should remain meaningfully independent when the work 
 
 The system must represent the guarantee actually available from the host environment.
 
-### Minimal ownership
+### Deliberate ownership
 
-AWCP should own only the state necessary to provide its work-control guarantees.
+AWCP owns the durable work-control state necessary to organize and audit work across agents and sessions. It should still reference or reuse external systems for concerns that do not belong to that semantic core.
 
 ---
 
@@ -451,22 +456,24 @@ The project is **not** trying to create:
 - a Jira/Kanban clone;
 - a generic workflow engine;
 - an IDE or chat interface;
-- a mandatory TUI;
+- a replacement TUI through which coding-agent conversations must occur;
 - a second source of truth without demonstrated need.
 
 ---
 
-## Observation and optional TUI
+## Local TUI and work inspection
 
 If meaningful work structure exists outside conversations, humans need direct visibility into it.
 
-A future observer may show:
+The local TUI should provide a fast view of:
 
 - current intent;
 - work packages and tasks;
 - dependencies and readiness;
 - required roles and their status;
 - resolved executors;
+- coding client, agent and session attribution where observable;
+- execution attempts and timestamps;
 - relevant context sources;
 - permission/enforcement guarantees;
 - pending human decisions;
@@ -475,7 +482,7 @@ A future observer may show:
 - failures and repair state;
 - progress and available telemetry.
 
-The TUI remains optional and owns no independent state.
+The TUI is part of the AWCP product, but remains secondary to the coding client. It reads and lightly edits the same authoritative state used by agent integrations and owns no independent state.
 
 ---
 
@@ -491,14 +498,13 @@ The TUI remains optional and owns no independent state.
 
 ## Success criterion for the research phase
 
-The project succeeds if it discovers the smallest truthful architecture that provides this experience.
+The project succeeds if it discovers the smallest truthful local product architecture that provides this experience.
 
 Possible outcomes include:
 
-1. a distinct AWCP is justified;
-2. only a thin semantic/integration layer is needed;
-3. existing work/context/control systems can be composed with coding-agent adapters;
-4. an existing product already provides the desired experience;
-5. some desired role/governance guarantees cannot be achieved without replacing the coding-client runtime, invalidating part of the vision.
+1. a minimal AWCP service, persistent store, TUI and client adapter are sufficient;
+2. existing work, context and control systems can supply most implementation capabilities beneath that core;
+3. some desired role/governance guarantees must be weakened because coding clients cannot expose or enforce them;
+4. part of the vision is invalidated if essential guarantees require replacing the coding-client runtime.
 
 The purpose is to discover the irreducible layer between **human intent**, **organized agentic software work** and **existing coding-agent execution**.

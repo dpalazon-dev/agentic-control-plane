@@ -4,7 +4,7 @@
 
 **Started.**
 
-This spike is limited to **Codex**. It does not design middleware, a custom runtime, an adapter daemon, a TUI, a scheduler or an AWCP-owned agent loop.
+This spike is limited to **Codex**. It validates the methodology and Codex-side integration contract before implementing the accepted local AWCP service, database or TUI. It does not design an execution proxy, a custom runtime, an adapter daemon, a scheduler or an AWCP-owned agent loop.
 
 The question is:
 
@@ -22,11 +22,15 @@ The question is:
 - Codex hooks;
 - MCP configuration;
 - Codex configuration profiles;
-- Codex-visible evidence and completion discipline.
+- Codex-visible evidence and completion discipline;
+- native signals available for work, agent and session attribution;
+- candidate mechanisms for reading work from and writing evidence to a future local AWCP service.
 
 ### Out of scope
 
-- custom middleware;
+- local AWCP service implementation;
+- database or persistence implementation;
+- custom execution middleware or proxy;
 - custom agent orchestration runtime;
 - custom scheduler;
 - custom event bus;
@@ -45,7 +49,7 @@ The question is:
 | Sandbox and approvals | Codex combines sandbox mode with approval policy; defaults include no network access and workspace-limited writes in local clients. | Select conservative execution boundaries per role: Developer may write; Reviewer should normally inspect; high-risk operations require approval. | `ENFORCEABLE` at sandbox boundary; `GUIDANCE_ONLY` for semantic role intent |
 | Rules | Rules control which commands Codex can run outside the sandbox; currently experimental. | Define deterministic command policy for unsafe or privileged commands where available. | `ENFORCEABLE` for supported command boundaries; experimental |
 | Hooks | Hooks run deterministic scripts during the Codex lifecycle. | Candidate for lightweight pre-flight or post-action checks if future evidence shows need; do not use to create AWCP middleware. | `OBSERVABLE` / potentially `ENFORCEABLE` for local deterministic checks |
-| MCP | Codex can connect to local or remote MCP servers and configure tool allow/deny lists and approval behavior. | Consume existing context, docs, browser, GitHub, issue tracker or verification tools. MCP is a tool/context surface, not the work-control plane itself. | `INJECTABLE`; tool policy can be partly `ENFORCEABLE` |
+| MCP | Codex can connect to local or remote MCP servers and configure tool allow/deny lists and approval behavior. | Consume existing tools and potentially expose the local AWCP service to Codex. MCP may be an adapter surface; it is not the authoritative work-control state itself. | `INJECTABLE`; tool policy can be partly `ENFORCEABLE` |
 | Config profiles | Codex config exposes settings such as sandbox, approval policy and MCP server/tool policy. | Define recommended local profiles for role-safe operation, without owning a runtime. | `ENFORCEABLE` where Codex config controls the host behavior |
 | Record & Replay | Codex can turn demonstrated workflows into reusable skills where the feature is available; current docs describe a desktop recording flow. | Possible way to capture a team methodology as a skill after the manual process stabilizes. | `INJECTABLE` / `GUIDANCE_ONLY` |
 
@@ -62,6 +66,20 @@ AWCP-style methodology can be:
 - **audited** through repository artifacts, commits, PRs and recorded evidence.
 
 It cannot be truthfully described as fully deterministic role orchestration unless a native Codex surface actually enforces that property. A prompt saying "Reviewer must be independent" is a rule of methodology; a separate subagent/session plus review-only permissions is stronger evidence, but still not the same as a custom scheduler.
+
+## Required future AWCP integration contract
+
+The accepted product boundary adds a persistent local service and TUI outside Codex. SPIKE-001 must therefore determine how much of the following contract Codex can satisfy natively:
+
+1. identify or select the active AWCP task;
+2. read its intent, constraints, required role and completion contract;
+3. associate execution with the observable Codex client, agent/subagent and session identifiers;
+4. record start, progress, decisions, handoffs and completion timestamps;
+5. submit role-specific evidence and unresolved findings;
+6. request or record a work-state transition without allowing an unsupported completion claim;
+7. leave enough provenance for the TUI to answer who did what, when, in which session and why.
+
+The exact API or protocol is not selected. MCP, hooks, skills, instructions, local commands and Codex-produced artifacts must be compared by their actual guarantee level. Missing or unstable session identity must be recorded as unsupported or degraded rather than inferred.
 
 ## Proposed Codex operating method
 
@@ -339,13 +357,14 @@ For implementation, bugfix and refactor work, default required roles are Develop
 
 ## Current conclusion
 
-For Codex, the first viable AWCP shape is **not middleware**. It is a strict operational methodology encoded through:
+For Codex, the first viable integration shape does not replace or proxy the native runtime. It combines the future local AWCP product with a strict operational methodology delivered through:
 
 - `AGENTS.md` for baseline rules;
 - optional instruction-only skills for reusable role playbooks;
 - subagents or separate sessions for role separation;
 - Codex sandbox, approvals, rules and MCP tool policy for technical boundaries;
-- explicit evidence and completion rules in the task transcript and repository artifacts.
+- explicit evidence and completion rules in the task transcript and repository artifacts;
+- a future client adapter that reads and writes the authoritative local AWCP work state through the strongest validated native surface.
 
 The next validation step should be a dry run on two realistic Codex tasks:
 

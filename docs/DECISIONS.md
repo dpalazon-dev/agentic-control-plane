@@ -4,7 +4,7 @@
 
 This log intentionally contains only a small set of accepted conceptual boundaries.
 
-`AWCP-DEC-001` through `AWCP-DEC-008` are currently accepted. Everything listed under **Open questions and undecided choices** remains `OPEN`.
+`AWCP-DEC-001` through `AWCP-DEC-009` are currently accepted. Everything listed under **Open questions and undecided choices** remains `OPEN`.
 
 Decision status vocabulary:
 
@@ -174,7 +174,7 @@ A role may be materialized through client-native agents/subagents or other suppo
 
 ---
 
-## AWCP-DEC-008 — Codex validation is methodology-first, not middleware-first
+## AWCP-DEC-008 — Codex validation separates methodology from product implementation
 
 **Status:** ACCEPTED
 
@@ -214,7 +214,41 @@ UNSUPPORTED
 
 If a requirement can only be expressed as instruction, it must not be described as deterministic enforcement.
 
-The burden of proof remains on adding any AWCP-owned software.
+This spike deliberately isolates the methodology and Codex integration contract before the local AWCP product is implemented. "Methodology-first" does not mean "software-free"; it means that product mechanisms must implement a validated work method rather than define it accidentally.
+
+---
+
+## AWCP-DEC-009 — AWCP is a local companion product with authoritative work-control state
+
+**Status:** ACCEPTED
+
+### Decision
+
+AWCP will include software running locally alongside the user's coding-agent environment. It will own the local database-backed control state required to organize and audit agentic software work.
+
+At minimum, that state must be able to represent or reference:
+
+- intents, work packages and tasks;
+- dependencies, constraints and lifecycle state;
+- required roles and resolved executors;
+- coding client, agent and session identity when observable;
+- execution attempts, timestamps and state transitions;
+- decisions, approvals, evidence and completion grounds.
+
+AWCP will expose this state to:
+
+- coding agents, through the strongest suitable client integration surface;
+- humans, through a local TUI optimized for fast inspection and light editing.
+
+The local TUI and agent integrations operate on the same authoritative work-control state. The TUI does not maintain a separate projection database or become the primary coding-agent interface.
+
+### Consequence
+
+AWCP is not merely a collection of prompts, `AGENTS.md` files or skills. Those are client integration and methodology-delivery mechanisms around a persistent local product.
+
+This does not make AWCP a coding-agent runtime or execution proxy. Codex, Claude Code, OpenCode and similar clients continue to own their conversations, model calls, agent loops and tool execution. AWCP records and governs the work around those executions.
+
+The existence of a local work-control database and TUI is decided. Their implementation language, database technology, process lifecycle, API/protocol and client-specific adapters remain open and must be validated before selection.
 
 ---
 
@@ -224,8 +258,7 @@ Everything below remains **OPEN**.
 
 ## Work and methodology model
 
-- `OPEN` — exact product scope;
-- `OPEN` — whether a distinct Work Control Plane is necessary after composition experiments;
+- `OPEN` — exact product scope beyond the accepted local work-control core;
 - `OPEN` — exact work hierarchy (`Intent`, `WorkPackage`, `Task`, or another model);
 - `OPEN` — minimum useful work representation;
 - `OPEN` — specification/work-contract representation;
@@ -287,12 +320,12 @@ Everything below remains **OPEN**.
 - `OPEN` — Spec Kit as a process/harness substrate;
 - `OPEN` — Okto Pulse as a sufficiently close existing solution;
 - `OPEN` — custom work model;
-- `OPEN` — source-of-truth semantics;
-- `OPEN` — which state AWCP must own versus reference;
+- `OPEN` — detailed source-of-truth semantics per work concern;
+- `OPEN` — exact boundary between state AWCP owns and external artifacts it references;
 - `OPEN` — repository files;
 - `OPEN` — Git persistence;
 - `OPEN` — SQLite or any other database;
-- `OPEN` — daemon versus on-demand process;
+- `OPEN` — service startup and lifecycle model while coding clients are active;
 - `OPEN` — concurrency, locking and crash recovery.
 
 ## Coding-client integration

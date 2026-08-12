@@ -605,7 +605,7 @@ AWCP is asking a different integration question:
 
 **HYPOTHESIS:** This integration problem may be a more meaningful gap than any individual context, memory, permission or orchestration feature.
 
-If suitable local systems already exist, the desired architecture may become a thin semantic coordination layer plus adapters rather than a large platform.
+If suitable local systems already exist, the AWCP product may remain a small local work-control service plus adapters and a TUI rather than a large platform.
 
 ---
 
@@ -656,6 +656,8 @@ The research now suggests several distinct but composable layers:
 ```
 
 Products may combine layers. The analytical distinction helps AWCP decide what to **own**, what to **integrate**, and what to leave entirely outside scope.
+
+The accepted product boundary now places a local AWCP service, its work-control database and its TUI in the first layer. Coding clients interact with that service but retain ownership of the execution layer and native agent loop.
 
 ---
 
@@ -739,9 +741,9 @@ This is one of the central risks. If independent Developer/Tester/Reviewer roles
 
 AWCP should attempt to use existing context, memory, permissions, sandboxing and observability systems. The unresolved issue is whether their integration surfaces fit existing coding agents rather than only custom runtimes.
 
-## 14.5 Does AWCP need to own work state?
+## 14.5 What exact work state must AWCP own?
 
-It may be enough to own only role/control metadata and references around an existing work substrate. Or even that may prove unnecessary.
+AWCP will own authoritative work-control state. The remaining question is its minimum schema and which specifications, repository artifacts, Git/PR/CI evidence, telemetry and context records should remain external references.
 
 ## 14.6 What does "done" mean across work types?
 
@@ -753,7 +755,7 @@ Implementation, research, debugging, migration, documentation and architecture w
 
 The strongest current hypothesis is:
 
-> **Provide a small, local and agent-agnostic work-control layer that turns software work into explicit role-driven execution contracts, then composes existing coding-agent and agent-infrastructure capabilities to carry them out without replacing the developer's normal coding client.**
+> **Provide a small, local and agent-agnostic work-control product that persistently turns software work into explicit role-driven execution contracts, exposes that state through a TUI, and composes existing coding-agent capabilities to carry them out without replacing the developer's normal coding client.**
 
 Potential differentiation, if validated, comes from the combination of:
 
@@ -766,33 +768,34 @@ Potential differentiation, if validated, comes from the combination of:
 7. **evidence attached to responsibilities and completion**;
 8. **integration with existing coding agents**, not a required custom agent runtime;
 9. **reuse of existing context/control/observability infrastructure** rather than rebuilding it;
-10. **human-readable persistent work state** with minimal ownership.
+10. **authoritative, human-readable local work state** shared by agent integrations and the TUI;
+11. **traceability across agents and sessions** where the coding client exposes trustworthy identity and lifecycle signals.
 
-None of these points yet proves a separate implementation should exist.
+The separate local product is now an accepted boundary. Research must still minimize its owned schema and infrastructure rather than treating every adjacent capability as part of AWCP.
 
 ---
 
 # 16. Falsification criteria
 
-AWCP should shrink radically or not be built as a separate system if existing tools can provide the desired experience through small composition.
+AWCP should shrink to the smallest useful local product when existing tools can provide parts of the desired experience through composition.
 
 Examples:
 
 ```text
-Spec Kit + Beads + client-native roles/hooks/policies
+AWCP core/TUI + Spec Kit + Beads + client-native roles/hooks/policies
 
-Backlog.md + coding-client agents + external context/control system + CI evidence
+AWCP core/TUI + Backlog.md + coding-client agents + CI evidence
 
-Okto Pulse + Nexus configured to provide required role methodology
+AWCP core/TUI + reusable Okto Pulse/Nexus capabilities
 
-coding-client-native agents + project memory + Git/CI + minimal semantic glue
+AWCP core/TUI + coding-client-native agents + project memory + Git/CI
 ```
 
-The right research question is:
+The right research question is now:
 
-> **What is the smallest composition that gives us persistent, role-driven, governed and verifiable software work across the coding agents we already use?**
+> **What is the smallest authoritative local work-control core, TUI and integration set that gives us persistent, role-driven, governed and verifiable software work across the coding agents we already use?**
 
-Only the irreducible gap should become owned AWCP architecture.
+Only that irreducible work-control core should become owned AWCP architecture; adjacent context, permission, runtime and observability systems should still be composed where possible.
 
 ---
 
@@ -831,11 +834,12 @@ Only the irreducible gap should become owned AWCP architecture.
 - role independence guarantees;
 - integration with existing local context/control systems;
 - mandatory AWCP participation while preserving native coding clients;
-- what state AWCP actually needs to own;
-- persistence/concurrency requirements.
+- exact work-control schema and external-reference boundary;
+- storage, process-lifecycle, persistence and concurrency requirements;
+- reliable coding-client, agent and session attribution.
 
 ## Potential genuine gap
 
-A **thin work-methodology control layer** may be underserved: one that tells existing coding agents not only *what work exists*, but **which distinct agent responsibilities must participate, under what context/permissions, and what evidence each must produce**—while delegating the underlying context, permission, runtime and observability machinery to systems that already solve those problems.
+A **thin local work-methodology control product** may be underserved: one that persistently tells existing coding agents not only *what work exists*, but **which distinct agent responsibilities must participate, under what context/permissions, and what evidence each must produce**; records execution and session provenance; and exposes the same state through a fast TUI while delegating context, permission, runtime and observability machinery to systems that already solve those problems.
 
 The next phase should optimize for **composition and falsification**, not feature accumulation.
