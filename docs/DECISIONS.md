@@ -4,7 +4,7 @@
 
 This log intentionally contains only a small set of accepted conceptual boundaries.
 
-`AWCP-DEC-001` through `AWCP-DEC-007` are currently accepted. Everything listed under **Open questions and undecided choices** remains `OPEN`.
+`AWCP-DEC-001` through `AWCP-DEC-008` are currently accepted. Everything listed under **Open questions and undecided choices** remains `OPEN`.
 
 Decision status vocabulary:
 
@@ -171,6 +171,50 @@ AWCP must be able to represent:
 - completion conditions tied to satisfaction of required roles.
 
 A role may be materialized through client-native agents/subagents or other supported mechanisms; AWCP does not thereby become a custom multi-agent runtime.
+
+---
+
+## AWCP-DEC-008 — Codex validation is methodology-first, not middleware-first
+
+**Status:** ACCEPTED
+
+### Decision
+
+The first Codex integration validation will not create middleware, a custom runtime, a daemon, a scheduler, an adapter service or an AWCP-owned agent loop.
+
+It will validate whether Codex's native surfaces can support a strict and auditable operating methodology for:
+
+```text
+Intent
+→
+Work Package / Task
+→
+required roles
+→
+role execution
+→
+evidence
+→
+completion
+```
+
+The methodology may be encoded through native Codex instructions, `AGENTS.md`, skills, subagents, permissions, sandboxing, rules, hooks, MCP configuration and explicit evidence requirements.
+
+### Consequence
+
+SPIKE-001 is Codex-only and must report actual guarantees honestly:
+
+```text
+ENFORCEABLE
+OBSERVABLE
+INJECTABLE
+GUIDANCE_ONLY
+UNSUPPORTED
+```
+
+If a requirement can only be expressed as instruction, it must not be described as deterministic enforcement.
+
+The burden of proof remains on adding any AWCP-owned software.
 
 ---
 

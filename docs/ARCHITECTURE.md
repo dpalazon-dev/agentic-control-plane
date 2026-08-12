@@ -656,7 +656,31 @@ A database should not be selected until these become concrete.
 
 ## 14. Revised validation spikes
 
-### SPIKE-001 — Coding-client integration and infrastructure surfaces
+### SPIKE-001 — Codex-native methodology surfaces
+
+First instance: [`spikes/SPIKE-001-CODEX.md`](spikes/SPIKE-001-CODEX.md).
+
+This spike validates Codex only and is methodology-first rather than middleware-first. It asks whether strict and auditable role-driven work can be expressed through Codex-native surfaces such as `AGENTS.md`, skills, subagents, permissions, sandboxing, rules, hooks, MCP and configuration.
+
+Expected output: a Codex-specific capability/guarantee matrix and a proposed operating rule set for:
+
+```text
+Intent
+  ↓
+Work Package / Task
+  ↓
+Required Roles
+  ↓
+Role Execution
+  ↓
+Evidence
+  ↓
+Completion
+```
+
+No custom runtime, middleware, adapter daemon, scheduler or product UI should be created during this spike.
+
+### Later spike — Multi-client integration and infrastructure surfaces
 
 For Claude Code, Codex, OpenCode and Gemini CLI, determine what AWCP can actually:
 

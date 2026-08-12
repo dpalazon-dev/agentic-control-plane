@@ -33,6 +33,10 @@ The Work Control Plane should also **reuse rather than reimplement** context man
 **Research and architecture validation.**  
 **No implementation exists.**
 
+Current active spike:
+
+- [`docs/spikes/SPIKE-001-CODEX.md`](docs/spikes/SPIKE-001-CODEX.md) - Codex-native methodology surfaces for strict, auditable work execution without middleware or a custom runtime.
+
 The project deliberately follows:
 
 `research → hypotheses → spikes → evidence → decisions → design → implementation`
@@ -60,5 +64,6 @@ It also does not assume that AWCP must own every supporting subsystem. Existing 
 2. [`docs/RESEARCH.md`](docs/RESEARCH.md) — what existing systems already solve and what gap, if any, remains.
 3. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architectural hypotheses and boundaries still requiring validation.
 4. [`docs/DECISIONS.md`](docs/DECISIONS.md) — accepted boundaries and explicitly open choices.
+5. [`docs/spikes/SPIKE-001-CODEX.md`](docs/spikes/SPIKE-001-CODEX.md) — first Codex-only validation spike.
 
 This repository is intentionally small until evidence justifies additional structure.
